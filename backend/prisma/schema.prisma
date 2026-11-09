@@ -1,0 +1,336 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  LOCATION
+  SYSTEM
+}
+
+enum LocationShareStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+enum JourneyStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum JourneyMemberStatus {
+  INVITED
+  ACCEPTED
+  DECLINED
+  LEFT
+  ARRIVED
+}
+
+// ==========================================
+// USER
+// ==========================================
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Connections
+  connectionsA       Connection[] @relation("ConnectionUserA")
+  connectionsB       Connection[] @relation("ConnectionUserB")
+  connectionRequests Connection[] @relation("ConnectionRequestedBy")
+
+  // Chat
+  conversations ConversationMember[]
+  messages      Message[] @relation("MessageSender")
+
+  // Live location
+  locationShares       LocationShare[] @relation("LocationOwner")
+  locationShareTargets LocationShareRecipient[]
+
+  // Journeys
+  createdJourneys      Journey[] @relation("JourneyCreator")
+  journeyMemberships   JourneyMember[] @relation("JourneyUser")
+  journeyInvitations   JourneyMember[] @relation("JourneyInviter")
+
+  @@index([name])
+  @@index([createdAt])
+}
+
+// ==========================================
+// CONNECTIONS
+// ==========================================
+
+model Connection {
+  id String @id @default(cuid())
+
+  userAId String
+  userBId String
+
+  requestedById String
+
+  status ConnectionStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userA User @relation("ConnectionUserA",fields: [userAId],references: [id],onDelete: Cascade)
+
+  userB User @relation("ConnectionUserB",fields: [userBId],references: [id],onDelete: Cascade)
+
+  requestedBy User @relation("ConnectionRequestedBy",fields: [requestedById],references: [id],onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId, status])
+  @@index([userBId, status])
+}
+
+// ==========================================
+// CONVERSATIONS
+// ==========================================
+
+model Conversation {
+  id String @id @default(cuid())
+
+  type ConversationType @default(DIRECT)
+
+  // For DIRECT conversations, generated from
+  // sorted user IDs. GROUP conversations use null.
+  directKey String? @unique
+
+  name String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([updatedAt])
+}
+
+// ==========================================
+// CONVERSATION MEMBERS
+// ==========================================
+
+model ConversationMember {
+  id String @id @default(cuid())
+
+  conversationId String
+  userId         String
+
+  joinedAt   DateTime @default(now())
+  lastReadAt DateTime?
+
+  conversation Conversation @relation(fields: [conversationId],references: [id],onDelete: Cascade)
+
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, joinedAt])
+}
+
+// ==========================================
+// MESSAGES
+// ==========================================
+
+model Message {
+  id String @id @default(cuid())
+
+  conversationId String
+  senderId       String
+
+  type    MessageType @default(TEXT)
+  content String?
+
+  // Optional image attachment
+  imageUrl String?
+
+  // Optional location attachment
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  editedAt  DateTime?
+  deletedAt DateTime?
+
+  conversation Conversation @relation(fields: [conversationId],references: [id],onDelete: Cascade)
+
+  sender User @relation("MessageSender",fields: [senderId],references: [id],onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// ==========================================
+// INDIVIDUAL LIVE LOCATION SHARING
+// ==========================================
+
+model LocationShare {
+  id String @id @default(cuid())
+
+  ownerId String
+
+  status LocationShareStatus @default(ACTIVE)
+
+  // Latest known position of the owner
+  latitude  Float?
+  longitude Float?
+
+  speed       Float?
+  heading     Float?
+  accuracy    Float?
+
+  lastUpdatedAt DateTime?
+
+  startedAt DateTime @default(now())
+  expiresAt DateTime?
+  endedAt   DateTime?
+
+  owner User @relation("LocationOwner",fields: [ownerId],references: [id],onDelete: Cascade)
+
+  recipients LocationShareRecipient[]
+
+  @@index([ownerId, status])
+  @@index([status, expiresAt])
+}
+
+// ==========================================
+// LOCATION SHARE RECIPIENTS
+// ==========================================
+
+model LocationShareRecipient {
+  id String @id @default(cuid())
+
+  shareId String
+  userId  String
+
+  createdAt DateTime @default(now())
+
+  share LocationShare @relation(fields: [shareId],references: [id],onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  @@unique([shareId, userId])
+  @@index([userId])
+}
+
+// ==========================================
+// JOURNEYS
+// ==========================================
+
+model Journey {
+  id String @id @default(cuid())
+
+  name String?
+
+  createdById String
+
+  // Common destination for all members
+  destinationName    String
+  destinationAddress String?
+  destinationLat     Float
+  destinationLng     Float
+
+  status JourneyStatus @default(PLANNED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  creator User @relation("JourneyCreator",fields: [createdById],references: [id],onDelete: Cascade)
+
+  members JourneyMember[]
+
+  @@index([createdById, status])
+  @@index([status, createdAt])
+}
+
+// ==========================================
+// JOURNEY MEMBERS
+// ==========================================
+
+model JourneyMember {
+  id String @id @default(cuid())
+
+  journeyId String
+  userId    String
+
+  // Who invited this user?
+  invitedById String?
+
+  status JourneyMemberStatus @default(INVITED)
+
+  // Individual starting location
+  originName    String?
+  originAddress String?
+  originLat     Float?
+  originLng     Float?
+
+  // Individual current location
+  currentLat  Float?
+  currentLng  Float?
+
+  // Current movement information
+  speed   Float?
+  heading Float?
+  accuracy Float?
+
+  lastLocationAt DateTime?
+
+  invitedAt  DateTime @default(now())
+  joinedAt   DateTime?
+  departedAt DateTime?
+  arrivedAt  DateTime?
+  leftAt     DateTime?
+
+  journey Journey @relation(fields: [journeyId],references: [id],onDelete: Cascade)
+
+  user User @relation("JourneyUser",fields: [userId],references: [id],onDelete: Cascade)
+
+  invitedBy User? @relation("JourneyInviter",fields: [invitedById],references: [id],onDelete: SetNull)
+
+  @@unique([journeyId, userId])
+  @@index([userId, status])
+  @@index([journeyId, status])
+}

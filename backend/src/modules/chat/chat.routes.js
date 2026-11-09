@@ -4,7 +4,8 @@ import { Router } from "express";
 import {
   createConversation,
   sendMessage,
-  getMessages
+  getMessages,
+  getConversations
 } from "./chat.controller.js";
 
 import {
@@ -39,5 +40,6 @@ router.get(
   "/:conversationId/messages",
   getMessages
 );
+router.get("/conversations", getConversations);
 
 export default router;

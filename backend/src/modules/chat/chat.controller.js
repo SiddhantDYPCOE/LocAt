@@ -2,7 +2,8 @@
 import {
   createOrGetConversation,
   sendTextMessage,
-  getConversationMessages
+  getConversationMessages,
+  getMyConversations
 } from "./chat.service.js";
 
 // Create or retrieve a direct conversation
@@ -101,4 +102,22 @@ const handleChatError = (error, res, next) => {
   }
 
   next(error);
+};
+
+export const getConversations = async (req, res) => {
+  try {
+    const conversations = await getMyConversations(req.user.userId);
+
+    return res.status(200).json({
+      success: true,
+      conversations,
+    });
+  } catch (error) {
+    console.error("Get conversations error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch conversations",
+    });
+  }
 };

@@ -210,3 +210,71 @@ export const getConversationMessages = async (
 
   return messages.reverse();
 };
+
+export const getMyConversations = async (userId) => {
+  // Fetch all conversations the user belongs to.
+  const memberships = await prisma.conversationMember.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      conversation: {
+        include: {
+          members: {
+            where: {
+              userId: {
+                not: userId,
+              },
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+          messages: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+            select: {
+              id: true,
+              content: true,
+              type: true,
+              senderId: true,
+              createdAt: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const conversations = memberships.map(({ conversation }) => {
+    const recipient = conversation.members[0];
+
+    return {
+      id: conversation.id,
+      type: conversation.type,
+      name: conversation.name,
+      updatedAt: conversation.updatedAt,
+      user: recipient?.user || null,
+      lastMessage: conversation.messages[0] || null,
+    };
+  });
+
+  // Show the most recently updated conversation first.
+  conversations.sort(
+    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+  );
+
+  return conversations;
+};

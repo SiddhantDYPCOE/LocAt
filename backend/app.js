@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./src/modules/auth/auth.routes.js";
 import connectionRoutes from "./src/modules/connections/connection.routes.js";
 import chatRoutes from "./src/modules/chat/chat.routes.js";
+import locationRoutes from "./src/modules/location/location.routes.js";
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/location", locationRoutes);
 
 // ========================================
 // 404 HANDLER

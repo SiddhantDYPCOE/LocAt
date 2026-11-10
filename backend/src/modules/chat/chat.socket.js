@@ -113,55 +113,74 @@ const registerChatSocket = (io, socket) => {
   });
 
   // SEND MESSAGE
-  socket.on("chat:send", async (data, acknowledge) => {
-    try {
-      const { conversationId, content } = data || {};
+  
+socket.on("chat:send", async (data, acknowledge) => {
+  try {
+    const { conversationId, content } = data || {};
 
-      if (
-        typeof conversationId !== "string" ||
-        typeof content !== "string"
-      ) {
-        throw new Error("Invalid message data");
-      }
-
-      const trimmedContent = content.trim();
-
-      if (!trimmedContent) {
-        throw new Error("Message cannot be empty");
-      }
-
-      if (trimmedContent.length > 5000) {
-        throw new Error("Message cannot exceed 5000 characters");
-      }
-
-      const room = `conversation:${conversationId}`;
-
-      if (!socket.rooms.has(room)) {
-        throw new Error("Join the conversation before sending messages");
-      }
-
-      // Save message using existing chat service
-      const message = await sendTextMessage(
-        userId,
-        conversationId,
-        trimmedContent
-      );
-
-      // Broadcast saved message to all conversation members
-      io.to(room).emit("chat:new-message", message);
-
-      acknowledge?.({
-        success: true,
-        message: "Message sent successfully",
-        data: message
-      });
-    } catch (error) {
-      acknowledge?.({
-        success: false,
-        message: error.message
-      });
+    if (
+      typeof conversationId !== "string" ||
+      typeof content !== "string"
+    ) {
+      throw new Error("Invalid message data");
     }
-  });
+
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      throw new Error("Message cannot be empty");
+    }
+
+    if (trimmedContent.length > 5000) {
+      throw new Error("Message cannot exceed 5000 characters");
+    }
+
+    const room = `conversation:${conversationId}`;
+
+    if (!socket.rooms.has(room)) {
+      throw new Error("Join the conversation before sending messages");
+    }
+
+    // Save the message in PostgreSQL.
+    const message = await sendTextMessage(
+      userId,
+      conversationId,
+      trimmedContent
+    );
+
+    // Find every member of this conversation.
+    const members = await prisma.conversationMember.findMany({
+      where: {
+        conversationId
+      },
+      select: {
+        userId: true
+      }
+    });
+
+    // Deliver to every member's personal room.
+    // This includes all their connected browser tabs/devices.
+    members.forEach((member) => {
+      io.to(`user:${member.userId}`).emit(
+        "chat:new-message",
+        message
+      );
+    });
+
+    acknowledge?.({
+      success: true,
+      message: "Message sent successfully",
+      data: message
+    });
+
+  } catch (error) {
+    acknowledge?.({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 };
 
 export default registerChatSocket;

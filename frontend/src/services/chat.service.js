@@ -30,6 +30,9 @@ const chatService = {
 
     return response.data;
   },
+
+  markAsRead: async (conversationId) =>
+    (await api.patch(`/chat/${conversationId}/read`)).data
 };
 
 export default chatService;

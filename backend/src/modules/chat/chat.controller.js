@@ -3,7 +3,8 @@ import {
   createOrGetConversation,
   sendTextMessage,
   getConversationMessages,
-  getMyConversations
+  getMyConversations,
+  markConversationAsRead
 } from "./chat.service.js";
 
 // Create or retrieve a direct conversation
@@ -118,6 +119,35 @@ export const getConversations = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch conversations",
+    });
+  }
+};
+
+
+export const markAsRead = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const result = await markConversationAsRead(
+      req.user.userId,
+      conversationId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversation marked as read",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Mark conversation as read error:", error);
+
+    const statusCode = error.message.includes("not a member")
+      ? 403
+      : 500;
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Unable to mark conversation as read",
     });
   }
 };

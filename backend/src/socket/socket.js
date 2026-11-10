@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 
 import registerChatSocket from "../modules/chat/chat.socket.js";
+import registerLocationSocket from "../modules/location/location.socket.js";
 
 const getCookieToken = (cookieHeader) => {
   if (!cookieHeader) return null;
@@ -59,17 +60,22 @@ const initializeSocket = (httpServer) => {
 
   // Register socket modules after successful connection
   io.on("connection", (socket) => {
-    console.log(`LocAt socket connected: ${socket.user.userId}`);
+  const userId = socket.user.userId;
 
-    registerChatSocket(io, socket);
+  console.log(`LocAt socket connected: ${userId}`);
 
-    socket.on("disconnect", (reason) => {
-      console.log(
-        `LocAt socket disconnected: ${socket.user.userId}`,
-        reason
-      );
-    });
+  // Every user's connected devices join their personal room.
+  socket.join(`user:${userId}`);
+
+  // Register chat events.
+  registerChatSocket(io, socket);
+  registerLocationSocket(io, socket);
+
+
+  socket.on("disconnect", (reason) => {
+    console.log(`LocAt socket disconnected: ${userId}`, reason);
   });
+});
 
   return io;
 };

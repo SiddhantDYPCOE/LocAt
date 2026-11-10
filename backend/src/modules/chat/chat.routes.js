@@ -5,7 +5,8 @@ import {
   createConversation,
   sendMessage,
   getMessages,
-  getConversations
+  getConversations,
+  markAsRead
 } from "./chat.controller.js";
 
 import {
@@ -27,6 +28,8 @@ router.post(
   validate(createConversationSchema),
   createConversation
 );
+
+router.patch("/:conversationId/read", markAsRead);
 
 // Send a text message
 router.post(

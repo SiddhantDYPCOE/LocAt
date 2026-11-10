@@ -21,6 +21,7 @@ import Login from "./pages/auth/Login.jsx";
 import Signup from "./pages/auth/SignUp.jsx";
 import Chats from "./pages/app/Chats.jsx";
 import Connections from "./pages/app/Connections.jsx";
+import { LocationProvider } from "./context/LocationContext.jsx";
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -113,7 +114,9 @@ const App = () => {
       <AuthProvider>
         <ConnectionProvider>
           <ChatProvider>
-            <AppRoutes />
+            <LocationProvider>
+              <AppRoutes />
+            </LocationProvider>
           </ChatProvider>
         </ConnectionProvider>
       </AuthProvider>

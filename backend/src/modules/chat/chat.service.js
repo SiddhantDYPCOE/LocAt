@@ -211,8 +211,8 @@ export const getConversationMessages = async (
   return messages.reverse();
 };
 
+
 export const getMyConversations = async (userId) => {
-  // Fetch all conversations the user belongs to.
   const memberships = await prisma.conversationMember.findMany({
     where: {
       userId,
@@ -258,23 +258,80 @@ export const getMyConversations = async (userId) => {
     },
   });
 
-  const conversations = memberships.map(({ conversation }) => {
-    const recipient = conversation.members[0];
+  const conversations = await Promise.all(
+    memberships.map(async (membership) => {
+      const conversation = membership.conversation;
 
-    return {
-      id: conversation.id,
-      type: conversation.type,
-      name: conversation.name,
-      updatedAt: conversation.updatedAt,
-      user: recipient?.user || null,
-      lastMessage: conversation.messages[0] || null,
-    };
-  });
+      // Count messages received after the user's last read time.
+      const unreadCount = await prisma.message.count({
+        where: {
+          conversationId: conversation.id,
+          senderId: {
+            not: userId,
+          },
+          deletedAt: null,
+          ...(membership.lastReadAt
+            ? {
+                createdAt: {
+                  gt: membership.lastReadAt,
+                },
+              }
+            : {}),
+        },
+      });
 
-  // Show the most recently updated conversation first.
+      return {
+        id: conversation.id,
+        type: conversation.type,
+        name: conversation.name,
+        updatedAt: conversation.updatedAt,
+        user: conversation.members[0]?.user || null,
+        lastMessage: conversation.messages[0] || null,
+        unreadCount,
+      };
+    })
+  );
+
   conversations.sort(
     (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
   );
 
   return conversations;
+};
+
+
+export const markConversationAsRead = async (userId, conversationId) => {
+  // Verify that the user belongs to this conversation.
+  const membership = await prisma.conversationMember.findUnique({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId,
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new Error("You are not a member of this conversation");
+  }
+
+  // Update the last-read timestamp.
+  const lastReadAt = new Date();
+
+  await prisma.conversationMember.update({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId,
+      },
+    },
+    data: {
+      lastReadAt,
+    },
+  });
+
+  return {
+    conversationId,
+    lastReadAt,
+  };
 };

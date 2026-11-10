@@ -161,41 +161,49 @@ export const ChatProvider = ({ children }) => {
     };
 
     const handleNewMessage = (message) => {
-      if (
-        message?.conversationId !==
-        selectedConversationRef.current?.id
-      ) {
-        return;
-      }
+  if (!message?.conversationId) return;
 
-      setMessages((previousMessages) => {
-        const exists = previousMessages.some(
-          (item) => item.id === message.id
-        );
+  // Update messages only if this conversation is currently open.
+  if (
+    message.conversationId ===
+    selectedConversationRef.current?.id
+  ) {
+    setMessages((previousMessages) => {
+      const exists = previousMessages.some(
+        (item) => item.id === message.id
+      );
 
-        if (exists) return previousMessages;
+      if (exists) return previousMessages;
 
-        return [...previousMessages, message];
-      });
+      return [...previousMessages, message];
+    });
+  }
 
-      // Update latest message and ordering in conversation list.
-      setConversations((previous) => {
-        const updated = previous.map((conversation) =>
-          conversation.id === message.conversationId
-            ? {
-                ...conversation,
-                lastMessage: message,
-                updatedAt: message.createdAt
-              }
-            : conversation
-        );
+  // Update the conversation preview and move it to the top.
+  setConversations((previous) => {
+    const conversationExists = previous.some(
+      (conversation) =>
+        conversation.id === message.conversationId
+    );
 
-        return updated.sort(
-          (a, b) =>
-            new Date(b.updatedAt) - new Date(a.updatedAt)
-        );
-      });
-    };
+    if (!conversationExists) return previous;
+
+    const updated = previous.map((conversation) =>
+      conversation.id === message.conversationId
+        ? {
+            ...conversation,
+            lastMessage: message,
+            updatedAt: message.createdAt
+          }
+        : conversation
+    );
+
+    return updated.sort(
+      (a, b) =>
+        new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
+  });
+};
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
@@ -257,6 +265,26 @@ export const ChatProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+
+  const markConversationReadLocally = (conversationId) => {
+  setConversations((prev) =>
+    prev.map((conversation) =>
+      conversation.id === conversationId
+        ? { ...conversation, unreadCount: 0 }
+        : conversation
+    )
+  );
+};
+
+const markConversationAsRead = async (conversationId) => {
+  try {
+    await chatService.markAsRead(conversationId);
+    markConversationReadLocally(conversationId);
+  } catch (error) {
+    console.error("Unable to mark conversation as read:", error);
+  }
+};
+
   // Create or retrieve a direct conversation.
   const openConversation = useCallback(async (recipientId) => {
     setLoading(true);
@@ -286,7 +314,7 @@ export const ChatProvider = ({ children }) => {
         const exists = previous.some(
           (item) => item.id === conversation.id
         );
-
+markConversationReadLocally(conversation.id);
         const updated = exists
           ? previous.map((item) =>
               item.id === conversation.id
@@ -310,7 +338,7 @@ export const ChatProvider = ({ children }) => {
       );
 
       setMessages(extractMessages(messageResponse));
-
+await markConversationAsRead(conversation.id);
       return conversationWithUser;
     } catch (err) {
       setError(
@@ -326,29 +354,27 @@ export const ChatProvider = ({ children }) => {
   }, [connections]);
 
   // Select an existing conversation.
-  const selectConversation = useCallback(async (conversation) => {
-    if (!conversation?.id) return;
+ const selectConversation = async (conversation) => {
+  if (!conversation?.id) return;
 
-    setSelectedConversation(conversation);
-    setMessages([]);
-    setLoading(true);
-    setError(null);
+  setSelectedConversation(conversation);
+  setMessages([]);
+  setError("");
 
-    try {
-      const response = await chatService.getMessages(
-        conversation.id
-      );
+  markConversationReadLocally(conversation.id);
 
-      setMessages(extractMessages(response));
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Unable to load messages"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  try {
+    const response = await chatService.getMessages(conversation.id);
+    setMessages(extractMessages(response));
+
+    await markConversationAsRead(conversation.id);
+  } catch (error) {
+    console.error("Unable to open conversation:", error);
+    setError(
+      error.response?.data?.message || "Unable to load messages"
+    );
+  }
+};
 
   // Send messages using Socket.IO.
   const sendMessage = useCallback(async (content) => {

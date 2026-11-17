@@ -12,15 +12,32 @@ import journeyRoutes from "./src/modules/journey/journey.routes.js";
 const app = express();
 
 // ========================================
-// MIDDLEWARES
+// CORS CONFIGURATION
 // ========================================
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true
-  })
-);
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://atposition.vercel.app"
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
+
+// ========================================
+// MIDDLEWARES
+// ========================================
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

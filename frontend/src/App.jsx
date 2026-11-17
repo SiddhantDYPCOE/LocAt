@@ -13,6 +13,8 @@ import {
 
 import { ConnectionProvider } from "./context/ConnectionContext.jsx";
 import { ChatProvider } from "./context/ChatContext.jsx";
+import { LocationProvider } from "./context/LocationContext.jsx";
+import { JourneyProvider } from "./context/JourneyContext.jsx";
 
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 import AppLayout from "./components/layout/AppLayout.jsx";
@@ -21,7 +23,8 @@ import Login from "./pages/auth/Login.jsx";
 import Signup from "./pages/auth/SignUp.jsx";
 import Chats from "./pages/app/Chats.jsx";
 import Connections from "./pages/app/Connections.jsx";
-import { LocationProvider } from "./context/LocationContext.jsx";
+import Journeys from "./pages/app/Journeys.jsx";
+import JourneyDetails from "./pages/app/JourneyDetails.jsx";
 import Map from "./pages/app/Map.jsx";
 
 const PublicRoute = ({ children }) => {
@@ -84,11 +87,19 @@ const AppRoutes = () => {
             element={<Connections />}
           />
 
-          <Route path="/map" element={<Map />} />
+          <Route
+            path="/map"
+            element={<Map/>}
+          />
 
           <Route
             path="/journeys"
-            element={<Placeholder title="Journeys" />}
+            element={<Journeys />}
+          />
+
+          <Route
+            path="/journeys/:journeyId"
+            element={<JourneyDetails />}
           />
 
           <Route
@@ -113,7 +124,9 @@ const App = () => {
         <ConnectionProvider>
           <ChatProvider>
             <LocationProvider>
-              <AppRoutes />
+              <JourneyProvider>
+                <AppRoutes />
+              </JourneyProvider>
             </LocationProvider>
           </ChatProvider>
         </ConnectionProvider>

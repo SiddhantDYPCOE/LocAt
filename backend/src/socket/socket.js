@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 import registerChatSocket from "../modules/chat/chat.socket.js";
 import registerLocationSocket from "../modules/location/location.socket.js";
+import registerJourneySocket from "../modules/journey/journey.socket.js";
 
 const getCookieToken = (cookieHeader) => {
   if (!cookieHeader) return null;
@@ -68,8 +69,9 @@ const initializeSocket = (httpServer) => {
   socket.join(`user:${userId}`);
 
   // Register chat events.
-  registerChatSocket(io, socket);
-  registerLocationSocket(io, socket);
+ registerChatSocket(io, socket);
+registerLocationSocket(io, socket);
+registerJourneySocket(io, socket);
 
 
   socket.on("disconnect", (reason) => {

@@ -6,12 +6,6 @@ import {
   stopLocationShare
 } from "./location.service.js";
 
-import {
-  startLocationShareSchema,
-  locationUpdateSchema,
-  locationShareIdSchema
-} from "./location.validation.js";
-
 // Start location sharing
 export const startShare = async (req, res) => {
   try {
@@ -22,6 +16,19 @@ export const startShare = async (req, res) => {
       validatedData.recipientIds,
       validatedData.expiresInMinutes ?? null
     );
+
+    // Notify every selected recipient through their personal socket room
+    const io = req.app.get("io");
+
+    for (const recipient of share.recipients) {
+      io.to(`user:${recipient.userId}`).emit(
+        "location:share-started",
+        {
+          shareId: share.id,
+          ownerId: share.ownerId
+        }
+      );
+    }
 
     return res.status(201).json({
       success: true,
@@ -65,7 +72,7 @@ export const getActiveShares = async (req, res) => {
 export const updateShareLocation = async (req, res) => {
   try {
     const { shareId } = req.validated.params;
-const locationData = req.validated.body;
+    const locationData = req.validated.body;
 
     const updatedShare = await updateLocationShare(
       req.user.userId,
@@ -101,6 +108,19 @@ export const stopShare = async (req, res) => {
     const stoppedShare = await stopLocationShare(
       req.user.userId,
       shareId
+    );
+
+    const io = req.app.get("io");
+
+    // Notify all recipients that this share has ended
+    io.to(`location:${shareId}`).emit("location:ended", {
+      shareId,
+      ownerId: req.user.userId
+    });
+
+    // Remove all connected sockets from this location room
+    await io.in(`location:${shareId}`).socketsLeave(
+      `location:${shareId}`
     );
 
     return res.status(200).json({

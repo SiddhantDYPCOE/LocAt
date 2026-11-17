@@ -1,5 +1,10 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 
 import { connectSocket } from "../socket/socket.js";
 
@@ -7,13 +12,68 @@ const useLocationTracking = () => {
   const watchIdRef = useRef(null);
   const shareIdRef = useRef(null);
   const socketRef = useRef(null);
+  const latestLocationRef = useRef(null);
 
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [error, setError] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
 
-  // Start GPS tracking
+  // ==========================================
+  // EMIT LOCATION TO BACKEND
+  // ==========================================
+
+  const emitLocation = useCallback((socket, shareId, location) => {
+    if (!socket?.connected || !shareId || !location) {
+      return;
+    }
+
+    socket.emit(
+      "location:update",
+      {
+        shareId,
+        ...location
+      },
+      (response) => {
+        if (!response?.success) {
+          console.error(
+            "Location update rejected:",
+            response?.message
+          );
+
+          setError(
+            response?.message || "Location update failed"
+          );
+        }
+      }
+    );
+  }, []);
+
+  // ==========================================
+  // JOIN LOCATION ROOM
+  // ==========================================
+
+  const joinLocationRoom = useCallback((socket, shareId) => {
+    return new Promise((resolve, reject) => {
+      socket.emit("location:join", { shareId }, (response) => {
+        if (!response?.success) {
+          reject(
+            new Error(
+              response?.message || "Unable to join location room"
+            )
+          );
+          return;
+        }
+
+        resolve(response.data);
+      });
+    });
+  }, []);
+
+  // ==========================================
+  // START GPS TRACKING
+  // ==========================================
+
   const startTracking = useCallback(async (shareId) => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by this browser");
@@ -25,24 +85,28 @@ const useLocationTracking = () => {
       return false;
     }
 
-    // Prevent duplicate GPS watchers
-    if (watchIdRef.current !== null) {
+    if (watchIdRef.current !== null || shareIdRef.current) {
+      setError("Location tracking is already active");
       return false;
     }
 
     setError("");
-    shareIdRef.current = shareId;
+
+    const socket = connectSocket();
+    socketRef.current = socket;
 
     try {
-      const socket = connectSocket();
-      socketRef.current = socket;
+      // Step 1: Wait for Socket.IO connection
 
       if (!socket.connected) {
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
             socket.off("connect", handleConnect);
             socket.off("connect_error", handleError);
-            reject(new Error("Unable to connect to location server"));
+
+            reject(
+              new Error("Unable to connect to location server")
+            );
           }, 10000);
 
           const handleConnect = () => {
@@ -62,9 +126,8 @@ const useLocationTracking = () => {
         });
       }
 
-      setSocketConnected(true);
+      // Step 2: Request initial GPS position
 
-      // Request permission and get initial location
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           resolve,
@@ -77,7 +140,7 @@ const useLocationTracking = () => {
         );
       });
 
-      const initialLocation = {
+      const location = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         speed: position.coords.speed,
@@ -85,42 +148,24 @@ const useLocationTracking = () => {
         accuracy: position.coords.accuracy
       };
 
-      // Join authorized location room
-      const joinResponse = await new Promise((resolve, reject) => {
-        socket.emit("location:join", { shareId }, (response) => {
-          if (!response?.success) {
-            reject(new Error(response?.message || "Unable to join location room"));
-            return;
-          }
+      // Step 3: Join authorized Socket.IO room
 
-          resolve(response);
-        });
-      });
+      await joinLocationRoom(socket, shareId);
 
-      // GPS updates are sent only after successful room join
-      const emitLocation = (location) => {
-        socket.emit(
-          "location:update",
-          {
-            shareId,
-            ...location
-          },
-          (response) => {
-            if (!response?.success) {
-              console.error("Location update rejected:", response?.message);
-              setError(response?.message || "Location update failed");
-            }
-          }
-        );
-      };
+      shareIdRef.current = shareId;
+      latestLocationRef.current = location;
 
-      setCurrentLocation(initialLocation);
-      emitLocation(initialLocation);
+      // Step 4: Save and emit initial location
 
-      // Start watching GPS changes
+      setCurrentLocation(location);
+
+      emitLocation(socket, shareId, location);
+
+      // Step 5: Start continuous GPS tracking
+
       watchIdRef.current = navigator.geolocation.watchPosition(
         (newPosition) => {
-          const location = {
+          const updatedLocation = {
             latitude: newPosition.coords.latitude,
             longitude: newPosition.coords.longitude,
             speed: newPosition.coords.speed,
@@ -128,12 +173,22 @@ const useLocationTracking = () => {
             accuracy: newPosition.coords.accuracy
           };
 
-          setCurrentLocation(location);
-          emitLocation(location);
+          latestLocationRef.current = updatedLocation;
+
+          setCurrentLocation(updatedLocation);
+
+          emitLocation(
+            socketRef.current,
+            shareIdRef.current,
+            updatedLocation
+          );
         },
         (gpsError) => {
           console.error("GPS tracking error:", gpsError);
-          setError(gpsError.message || "Unable to track your location");
+
+          setError(
+            gpsError.message || "Unable to track your location"
+          );
         },
         {
           enableHighAccuracy: true,
@@ -143,19 +198,36 @@ const useLocationTracking = () => {
       );
 
       setIsTracking(true);
+
       return true;
 
     } catch (err) {
       console.error("Start location tracking error:", err);
 
-      setError(err.message || "Unable to start location tracking");
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+
+      if (socket.connected) {
+        socket.emit("location:leave", { shareId });
+      }
 
       shareIdRef.current = null;
+      latestLocationRef.current = null;
+
+      setCurrentLocation(null);
+      setIsTracking(false);
+      setError(err.message || "Unable to start location tracking");
+
       return false;
     }
-  }, []);
+  }, [emitLocation, joinLocationRoom]);
 
-  // Stop GPS tracking
+  // ==========================================
+  // STOP GPS TRACKING
+  // ==========================================
+
   const stopTracking = useCallback((notifyServer = true) => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -165,11 +237,14 @@ const useLocationTracking = () => {
     const socket = socketRef.current;
     const shareId = shareIdRef.current;
 
-    if (socket && shareId) {
+    if (socket?.connected && shareId) {
       if (notifyServer) {
         socket.emit("location:stop", { shareId }, (response) => {
           if (!response?.success) {
-            console.error("Stop location error:", response?.message);
+            console.error(
+              "Stop location error:",
+              response?.message
+            );
           }
         });
       } else {
@@ -178,19 +253,47 @@ const useLocationTracking = () => {
     }
 
     shareIdRef.current = null;
+    latestLocationRef.current = null;
 
     setIsTracking(false);
     setCurrentLocation(null);
     setError("");
   }, []);
 
-  // Monitor socket connection
+  // ==========================================
+  // SOCKET CONNECTION MONITOR
+  // ==========================================
+
   useEffect(() => {
     const socket = connectSocket();
+
     socketRef.current = socket;
 
-    const handleConnect = () => setSocketConnected(true);
-    const handleDisconnect = () => setSocketConnected(false);
+    const handleConnect = async () => {
+      setSocketConnected(true);
+
+      const shareId = shareIdRef.current;
+      const latestLocation = latestLocationRef.current;
+
+      // Rejoin room after reconnection
+      if (shareId) {
+        try {
+          await joinLocationRoom(socket, shareId);
+
+          // Send latest coordinates immediately
+          if (latestLocation) {
+            emitLocation(socket, shareId, latestLocation);
+          }
+        } catch (err) {
+          console.error("Location room reconnection failed:", err);
+          setError("Unable to reconnect location sharing");
+        }
+      }
+    };
+
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+    };
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
@@ -201,13 +304,17 @@ const useLocationTracking = () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
     };
-  }, []);
+  }, [emitLocation, joinLocationRoom]);
 
-  // Cleanup GPS watcher when component unmounts
+  // ==========================================
+  // CLEANUP GPS WATCHER
+  // ==========================================
+
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
     };
   }, []);

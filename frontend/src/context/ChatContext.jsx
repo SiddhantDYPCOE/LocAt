@@ -12,6 +12,7 @@ import { useAuth } from "./AuthContext.jsx";
 import { useConnections } from "./ConnectionContext.jsx";
 
 import chatService from "../services/chat.service.js";
+
 import {
   connectSocket,
   disconnectSocket
@@ -161,49 +162,49 @@ export const ChatProvider = ({ children }) => {
     };
 
     const handleNewMessage = (message) => {
-  if (!message?.conversationId) return;
+      if (!message?.conversationId) return;
 
-  // Update messages only if this conversation is currently open.
-  if (
-    message.conversationId ===
-    selectedConversationRef.current?.id
-  ) {
-    setMessages((previousMessages) => {
-      const exists = previousMessages.some(
-        (item) => item.id === message.id
-      );
+      // Update messages only if this conversation is currently open.
+      if (
+        message.conversationId ===
+        selectedConversationRef.current?.id
+      ) {
+        setMessages((previousMessages) => {
+          const exists = previousMessages.some(
+            (item) => item.id === message.id
+          );
 
-      if (exists) return previousMessages;
+          if (exists) return previousMessages;
 
-      return [...previousMessages, message];
-    });
-  }
+          return [...previousMessages, message];
+        });
+      }
 
-  // Update the conversation preview and move it to the top.
-  setConversations((previous) => {
-    const conversationExists = previous.some(
-      (conversation) =>
-        conversation.id === message.conversationId
-    );
+      // Update the conversation preview and move it to the top.
+      setConversations((previous) => {
+        const conversationExists = previous.some(
+          (conversation) =>
+            conversation.id === message.conversationId
+        );
 
-    if (!conversationExists) return previous;
+        if (!conversationExists) return previous;
 
-    const updated = previous.map((conversation) =>
-      conversation.id === message.conversationId
-        ? {
-            ...conversation,
-            lastMessage: message,
-            updatedAt: message.createdAt
-          }
-        : conversation
-    );
+        const updated = previous.map((conversation) =>
+          conversation.id === message.conversationId
+            ? {
+                ...conversation,
+                lastMessage: message,
+                updatedAt: message.createdAt
+              }
+            : conversation
+        );
 
-    return updated.sort(
-      (a, b) =>
-        new Date(b.updatedAt) - new Date(a.updatedAt)
-    );
-  });
-};
+        return updated.sort(
+          (a, b) =>
+            new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
+      });
+    };
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
@@ -265,25 +266,24 @@ export const ChatProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-
   const markConversationReadLocally = (conversationId) => {
-  setConversations((prev) =>
-    prev.map((conversation) =>
-      conversation.id === conversationId
-        ? { ...conversation, unreadCount: 0 }
-        : conversation
-    )
-  );
-};
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, unreadCount: 0 }
+          : conversation
+      )
+    );
+  };
 
-const markConversationAsRead = async (conversationId) => {
-  try {
-    await chatService.markAsRead(conversationId);
-    markConversationReadLocally(conversationId);
-  } catch (error) {
-    console.error("Unable to mark conversation as read:", error);
-  }
-};
+  const markConversationAsRead = async (conversationId) => {
+    try {
+      await chatService.markAsRead(conversationId);
+      markConversationReadLocally(conversationId);
+    } catch (error) {
+      console.error("Unable to mark conversation as read:", error);
+    }
+  };
 
   // Create or retrieve a direct conversation.
   const openConversation = useCallback(async (recipientId) => {
@@ -314,7 +314,9 @@ const markConversationAsRead = async (conversationId) => {
         const exists = previous.some(
           (item) => item.id === conversation.id
         );
-markConversationReadLocally(conversation.id);
+
+        markConversationReadLocally(conversation.id);
+
         const updated = exists
           ? previous.map((item) =>
               item.id === conversation.id
@@ -338,7 +340,9 @@ markConversationReadLocally(conversation.id);
       );
 
       setMessages(extractMessages(messageResponse));
-await markConversationAsRead(conversation.id);
+
+      await markConversationAsRead(conversation.id);
+
       return conversationWithUser;
     } catch (err) {
       setError(
@@ -354,30 +358,30 @@ await markConversationAsRead(conversation.id);
   }, [connections]);
 
   // Select an existing conversation.
- const selectConversation = async (conversation) => {
-  if (!conversation?.id) return;
+  const selectConversation = async (conversation) => {
+    if (!conversation?.id) return;
 
-  setSelectedConversation(conversation);
-  setMessages([]);
-  setError("");
+    setSelectedConversation(conversation);
+    setMessages([]);
+    setError("");
 
-  markConversationReadLocally(conversation.id);
+    markConversationReadLocally(conversation.id);
 
-  try {
-    const response = await chatService.getMessages(conversation.id);
-    setMessages(extractMessages(response));
+    try {
+      const response = await chatService.getMessages(conversation.id);
+      setMessages(extractMessages(response));
 
-    await markConversationAsRead(conversation.id);
-  } catch (error) {
-    console.error("Unable to open conversation:", error);
-    setError(
-      error.response?.data?.message || "Unable to load messages"
-    );
-  }
-};
+      await markConversationAsRead(conversation.id);
+    } catch (error) {
+      console.error("Unable to open conversation:", error);
+      setError(
+        error.response?.data?.message || "Unable to load messages"
+      );
+    }
+  };
 
-  // Send messages using Socket.IO.
-  const sendMessage = useCallback(async (content) => {
+  // Shared Socket.IO message sender.
+  const emitMessage = useCallback(async (payload) => {
     const socket = socketRef.current;
     const conversationId = selectedConversationRef.current?.id;
 
@@ -396,10 +400,6 @@ await markConversationAsRead(conversation.id);
       throw new Error("Conversation is not connected yet");
     }
 
-    const trimmedContent = content.trim();
-
-    if (!trimmedContent) return;
-
     setSending(true);
     setError(null);
 
@@ -409,7 +409,7 @@ await markConversationAsRead(conversation.id);
           "chat:send",
           {
             conversationId,
-            content: trimmedContent
+            ...payload
           },
           (timeoutError, response) => {
             if (timeoutError) {
@@ -438,6 +438,44 @@ await markConversationAsRead(conversation.id);
     }
   }, []);
 
+  // Send a normal text message.
+  const sendMessage = useCallback(async (content) => {
+    const trimmedContent = content?.trim();
+
+    if (!trimmedContent) return;
+
+    if (trimmedContent.length > 5000) {
+      throw new Error("Message cannot exceed 5000 characters");
+    }
+
+    return emitMessage({
+      type: "TEXT",
+      content: trimmedContent
+    });
+  }, [emitMessage]);
+
+  // Send a location message.
+  const sendLocationMessage = useCallback(async (latitude, longitude) => {
+    if (
+      typeof latitude !== "number" ||
+      typeof longitude !== "number" ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      throw new Error("Invalid location coordinates");
+    }
+
+    return emitMessage({
+      type: "LOCATION",
+      latitude,
+      longitude
+    });
+  }, [emitMessage]);
+
   const value = {
     conversations,
     selectedConversation,
@@ -451,7 +489,8 @@ await markConversationAsRead(conversation.id);
     openConversation,
     selectConversation,
     setSelectedConversation,
-    sendMessage
+    sendMessage,
+    sendLocationMessage
   };
 
   return (

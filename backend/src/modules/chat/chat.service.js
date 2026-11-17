@@ -41,6 +41,49 @@ const verifyConversationMember = async (conversationId, userId) => {
   return member;
 };
 
+// Verify conversation access and accepted connection
+const verifyConversationAccess = async (userId, conversationId) => {
+  await verifyConversationMember(conversationId, userId);
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: {
+      members: {
+        select: { userId: true }
+      }
+    }
+  });
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  if (conversation.type === "DIRECT") {
+    const recipient = conversation.members.find(
+      (member) => member.userId !== userId
+    );
+
+    if (!recipient) {
+      throw new Error("Conversation recipient not found");
+    }
+
+    await verifyAcceptedConnection(userId, recipient.userId);
+  }
+
+  return conversation;
+};
+
+// Shared message sender information
+const messageInclude = {
+  sender: {
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      avatarUrl: true
+    }
+  }
+};
 
 // Create or retrieve a direct conversation
 export const createOrGetConversation = async (userId, recipientId) => {
@@ -98,94 +141,65 @@ export const createOrGetConversation = async (userId, recipientId) => {
   return conversation;
 };
 
-
 // Send a text message
 export const sendTextMessage = async (
   userId,
   conversationId,
   content
 ) => {
-  await verifyConversationMember(conversationId, userId);
+  await verifyConversationAccess(userId, conversationId);
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: conversationId },
-    include: {
-      members: {
-        select: { userId: true }
-      }
-    }
-  });
-
-  if (!conversation) {
-    throw new Error("Conversation not found");
-  }
-
-  if (conversation.type === "DIRECT") {
-    const recipient = conversation.members.find(
-      (member) => member.userId !== userId
-    );
-
-    if (!recipient) {
-      throw new Error("Conversation recipient not found");
-    }
-
-    await verifyAcceptedConnection(userId, recipient.userId);
-  }
-
-  const message = await prisma.message.create({
+  return prisma.message.create({
     data: {
       conversationId,
       senderId: userId,
       type: "TEXT",
       content
     },
-    include: {
-      sender: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatarUrl: true
-        }
-      }
-    }
+    include: messageInclude
   });
-
-  return message;
 };
 
+// Send a location message
+export const sendLocationMessage = async (
+  userId,
+  conversationId,
+  latitude,
+  longitude
+) => {
+  await verifyConversationAccess(userId, conversationId);
+
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new Error("Invalid location coordinates");
+  }
+
+  return prisma.message.create({
+    data: {
+      conversationId,
+      senderId: userId,
+      type: "LOCATION",
+      latitude,
+      longitude
+    },
+    include: messageInclude
+  });
+};
 
 // Get the latest 50 messages
 export const getConversationMessages = async (
   userId,
   conversationId
 ) => {
-  await verifyConversationMember(conversationId, userId);
-
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: conversationId },
-    include: {
-      members: {
-        select: { userId: true }
-      }
-    }
-  });
-
-  if (!conversation) {
-    throw new Error("Conversation not found");
-  }
-
-  if (conversation.type === "DIRECT") {
-    const recipient = conversation.members.find(
-      (member) => member.userId !== userId
-    );
-
-    if (!recipient) {
-      throw new Error("Conversation recipient not found");
-    }
-
-    await verifyAcceptedConnection(userId, recipient.userId);
-  }
+  await verifyConversationAccess(userId, conversationId);
 
   const messages = await prisma.message.findMany({
     where: {
@@ -196,21 +210,11 @@ export const getConversationMessages = async (
       createdAt: "desc"
     },
     take: 50,
-    include: {
-      sender: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatarUrl: true
-        }
-      }
-    }
+    include: messageInclude
   });
 
   return messages.reverse();
 };
-
 
 export const getMyConversations = async (userId) => {
   const memberships = await prisma.conversationMember.findMany({
@@ -249,6 +253,8 @@ export const getMyConversations = async (userId) => {
               id: true,
               content: true,
               type: true,
+              latitude: true,
+              longitude: true,
               senderId: true,
               createdAt: true,
             },
@@ -299,9 +305,7 @@ export const getMyConversations = async (userId) => {
   return conversations;
 };
 
-
 export const markConversationAsRead = async (userId, conversationId) => {
-  // Verify that the user belongs to this conversation.
   const membership = await prisma.conversationMember.findUnique({
     where: {
       conversationId_userId: {
@@ -315,7 +319,6 @@ export const markConversationAsRead = async (userId, conversationId) => {
     throw new Error("You are not a member of this conversation");
   }
 
-  // Update the last-read timestamp.
   const lastReadAt = new Date();
 
   await prisma.conversationMember.update({

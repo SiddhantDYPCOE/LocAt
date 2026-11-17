@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.locat-marker-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.locat-marker {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+}
+
+.locat-marker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.locat-marker-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}

@@ -1,5 +1,18 @@
 
 import { useEffect, useRef, useState } from "react";
+
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker
+} from "react-leaflet";
+
+import "leaflet/dist/leaflet.css";
+
+import {
+  useNavigate
+} from "react-router-dom";
+
 import {
   Send,
   MessageCircle,
@@ -7,19 +20,24 @@ import {
   Phone,
   Video,
   Loader2,
-  Wifi,
-  WifiOff
+  WifiOff,
+  MapPin,
+  Navigation
 } from "lucide-react";
 
 import { useChat } from "../../context/ChatContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
+
+// ==========================================
+// AVATAR
+// ==========================================
 
 const Avatar = ({ user, size = "h-11 w-11" }) => (
   <div className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-300`}>
     {user?.avatarUrl ? (
       <img
         src={user.avatarUrl}
-        alt={user.name}
+        alt={user.name || "User"}
         className="h-full w-full object-cover"
       />
     ) : (
@@ -30,6 +48,10 @@ const Avatar = ({ user, size = "h-11 w-11" }) => (
   </div>
 );
 
+// ==========================================
+// TIME FORMATTER
+// ==========================================
+
 const formatTime = (date) => {
   if (!date) return "";
 
@@ -39,7 +61,111 @@ const formatTime = (date) => {
   });
 };
 
+// ==========================================
+// LOCATION PREVIEW
+// ==========================================
+
+const LocationPreview = ({
+  latitude,
+  longitude,
+  onClick
+}) => {
+  const validCoordinates =
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180;
+
+  if (!validCoordinates) {
+    return (
+      <div className="rounded-xl bg-slate-800 p-4 text-sm text-slate-300">
+        Location unavailable
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      className="w-[240px] max-w-full cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-[#0D1524] text-left transition hover:border-indigo-400/50"
+      title="Open location in LocAt Map"
+    >
+      {/* MINI MAP */}
+
+      <div className="relative h-[145px] w-full overflow-hidden">
+        <MapContainer
+          center={[latitude, longitude]}
+          zoom={15}
+          scrollWheelZoom={false}
+          dragging={false}
+          doubleClickZoom={false}
+          touchZoom={false}
+          zoomControl={false}
+          attributionControl={false}
+          keyboard={false}
+          className="h-full w-full"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <CircleMarker
+            center={[latitude, longitude]}
+            radius={9}
+            pathOptions={{
+              color: "#ffffff",
+              weight: 3,
+              fillColor: "#6366f1",
+              fillOpacity: 1
+            }}
+          />
+        </MapContainer>
+
+        <div className="pointer-events-none absolute bottom-2 right-2 rounded-lg bg-[#080D1A]/90 p-2 text-white shadow-lg">
+          <Navigation size={15} />
+        </div>
+      </div>
+
+      {/* LOCATION DETAILS */}
+
+      <div className="flex items-center gap-3 p-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+          <MapPin size={18} />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">
+            Location
+          </p>
+
+          <p className="text-xs text-slate-400">
+            Tap to view on LocAt Map
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// CHAT WINDOW
+// ==========================================
+
 const ChatWindow = () => {
+  const navigate = useNavigate();
+
   const {
     selectedConversation,
     messages,
@@ -47,34 +173,46 @@ const ChatWindow = () => {
     sending,
     socketConnected,
     error,
-    sendMessage
+    sendMessage,
+    sendLocationMessage
   } = useChat();
 
   const { user: currentUser } = useAuth();
 
   const [content, setContent] = useState("");
   const [sendError, setSendError] = useState("");
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
   const recipient = selectedConversation?.user;
 
-  // Scroll to the latest message.
+  // ==========================================
+  // SCROLL TO LATEST MESSAGE
+  // ==========================================
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth"
     });
   }, [messages]);
 
-  // Clear the input when changing conversations.
+  // ==========================================
+  // RESET INPUT ON CONVERSATION CHANGE
+  // ==========================================
+
   useEffect(() => {
     setContent("");
     setSendError("");
   }, [selectedConversation?.id]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
+  // ==========================================
+  // SEND TEXT MESSAGE
+  // ==========================================
+
+  const handleSend = async (event) => {
+    event.preventDefault();
 
     const trimmedContent = content.trim();
 
@@ -84,19 +222,103 @@ const ChatWindow = () => {
 
     try {
       await sendMessage(trimmedContent);
+
       setContent("");
+
       textareaRef.current?.focus();
     } catch (err) {
-      setSendError(err.message || "Unable to send message");
+      setSendError(
+        err.message || "Unable to send message"
+      );
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend(e);
+  // ==========================================
+  // SEND LOCATION MESSAGE
+  // ==========================================
+
+  const handleShareLocation = async () => {
+    if (locationLoading || sending) return;
+
+    setSendError("");
+
+    if (!navigator.geolocation) {
+      setSendError(
+        "Geolocation is not supported by this browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+
+    try {
+      const position = await new Promise(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            }
+          );
+        }
+      );
+
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      await sendLocationMessage(
+        latitude,
+        longitude
+      );
+    } catch (err) {
+      let message = err.message || "Unable to share location.";
+
+      if (err.code === 1) {
+        message = "Location permission was denied. Allow location access in your browser.";
+      } else if (err.code === 2) {
+        message = "Your current location is unavailable.";
+      } else if (err.code === 3) {
+        message = "Location request timed out. Please try again.";
+      }
+
+      setSendError(message);
+    } finally {
+      setLocationLoading(false);
     }
   };
+
+  // ==========================================
+  // OPEN SHARED LOCATION ON LOCAT MAP
+  // ==========================================
+
+  const handleOpenLocation = (latitude, longitude) => {
+    navigate("/map", {
+      state: {
+        focusLocation: {
+          latitude,
+          longitude
+        }
+      }
+    });
+  };
+
+  // ==========================================
+  // KEYBOARD HANDLING
+  // ==========================================
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSend(event);
+    }
+  };
+
+  // ==========================================
+  // NO CONVERSATION SELECTED
+  // ==========================================
 
   if (!selectedConversation) {
     return (
@@ -117,10 +339,15 @@ const ChatWindow = () => {
     );
   }
 
+  // ==========================================
+  // RENDER
+  // ==========================================
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#080D1A]">
 
-      {/* Chat header */}
+      {/* CHAT HEADER */}
+
       <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-white/5 bg-[#0D1524] px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar user={recipient} />
@@ -134,6 +361,7 @@ const ChatWindow = () => {
               {socketConnected ? (
                 <>
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+
                   <span className="text-xs text-emerald-400">
                     Connected
                   </span>
@@ -141,6 +369,7 @@ const ChatWindow = () => {
               ) : (
                 <>
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+
                   <span className="text-xs text-amber-400">
                     Reconnecting...
                   </span>
@@ -179,7 +408,8 @@ const ChatWindow = () => {
         </div>
       </header>
 
-      {/* Messages */}
+      {/* MESSAGES */}
+
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
         {loading ? (
           <div className="flex h-full items-center justify-center">
@@ -201,16 +431,22 @@ const ChatWindow = () => {
           </div>
         ) : (
           <div className="mx-auto max-w-4xl space-y-5">
+
             {messages.map((message) => {
               const isOwnMessage =
                 message.senderId === currentUser?.id ||
                 message.sender?.id === currentUser?.id;
 
+              const isLocationMessage =
+                message.type === "LOCATION";
+
               return (
                 <div
                   key={message.id}
                   className={`flex items-end gap-2 ${
-                    isOwnMessage ? "justify-end" : "justify-start"
+                    isOwnMessage
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
                   {!isOwnMessage && (
@@ -221,21 +457,36 @@ const ChatWindow = () => {
                   )}
 
                   <div
-                    className={`max-w-[80%] sm:max-w-[65%] ${
-                      isOwnMessage ? "items-end" : "items-start"
-                    } flex flex-col`}
+                    className={`flex max-w-[80%] flex-col ${
+                      isOwnMessage
+                        ? "items-end"
+                        : "items-start"
+                    }`}
                   >
-                    <div
-                      className={`rounded-2xl px-4 py-3 ${
-                        isOwnMessage
-                          ? "rounded-br-md bg-indigo-500 text-white"
-                          : "rounded-bl-md border border-white/5 bg-[#151F31] text-slate-200"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words text-sm leading-6">
-                        {message.content}
-                      </p>
-                    </div>
+                    {isLocationMessage ? (
+                      <LocationPreview
+                        latitude={message.latitude}
+                        longitude={message.longitude}
+                        onClick={() =>
+                          handleOpenLocation(
+                            message.latitude,
+                            message.longitude
+                          )
+                        }
+                      />
+                    ) : (
+                      <div
+                        className={`rounded-2xl px-4 py-3 ${
+                          isOwnMessage
+                            ? "rounded-br-md bg-indigo-500 text-white"
+                            : "rounded-bl-md border border-white/5 bg-[#151F31] text-slate-200"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                          {message.content}
+                        </p>
+                      </div>
+                    )}
 
                     <span className="mt-1 px-1 text-[10px] text-slate-600">
                       {formatTime(message.createdAt)}
@@ -246,11 +497,13 @@ const ChatWindow = () => {
             })}
 
             <div ref={messagesEndRef} />
+
           </div>
         )}
       </div>
 
-      {/* Connection warning */}
+      {/* CONNECTION WARNING */}
+
       {!socketConnected && (
         <div className="flex items-center gap-2 border-t border-amber-500/10 bg-amber-500/5 px-4 py-2 text-xs text-amber-400">
           <WifiOff className="h-4 w-4" />
@@ -258,23 +511,28 @@ const ChatWindow = () => {
         </div>
       )}
 
-      {/* Error */}
+      {/* ERROR */}
+
       {(sendError || error) && (
         <div className="px-4 pb-2 text-xs text-rose-400">
           {sendError || error}
         </div>
       )}
 
-      {/* Message composer */}
+      {/* MESSAGE COMPOSER */}
+
       <form
         onSubmit={handleSend}
         className="shrink-0 border-t border-white/5 bg-[#0D1524] p-4 sm:px-6"
       >
-        <div className="mx-auto flex max-w-4xl items-end gap-3">
+        <div className="mx-auto flex max-w-4xl items-end gap-2 sm:gap-3">
+
+          {/* TEXT INPUT */}
+
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(event) => setContent(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write a message..."
             rows={1}
@@ -282,9 +540,36 @@ const ChatWindow = () => {
             className="max-h-32 min-h-[48px] flex-1 resize-y rounded-2xl border border-white/5 bg-[#151F31] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500"
           />
 
+          {/* SHARE LOCATION */}
+
+          <button
+            type="button"
+            onClick={handleShareLocation}
+            disabled={
+              sending ||
+              locationLoading ||
+              !socketConnected
+            }
+            title="Share current location"
+            aria-label="Share current location"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#151F31] text-indigo-400 transition hover:bg-indigo-500/10 hover:text-indigo-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {locationLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <MapPin className="h-5 w-5" />
+            )}
+          </button>
+
+          {/* SEND MESSAGE */}
+
           <button
             type="submit"
-            disabled={!content.trim() || sending || !socketConnected}
+            disabled={
+              !content.trim() ||
+              sending ||
+              !socketConnected
+            }
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-500 text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {sending ? (
@@ -293,12 +578,14 @@ const ChatWindow = () => {
               <Send className="h-5 w-5" />
             )}
           </button>
+
         </div>
 
         <p className="mx-auto mt-2 max-w-4xl text-[10px] text-slate-600">
           Press Enter to send · Shift + Enter for a new line
         </p>
       </form>
+
     </div>
   );
 };

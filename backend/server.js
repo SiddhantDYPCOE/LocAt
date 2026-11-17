@@ -13,6 +13,9 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = initializeSocket(server);
 
+// Make Socket.IO accessible inside Express controllers
+app.set("io", io);
+
 // Start server
 server.listen(PORT, () => {
   console.log(`LocAt server running on port ${PORT}`);

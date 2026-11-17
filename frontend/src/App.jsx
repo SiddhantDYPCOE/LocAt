@@ -22,6 +22,7 @@ import Signup from "./pages/auth/SignUp.jsx";
 import Chats from "./pages/app/Chats.jsx";
 import Connections from "./pages/app/Connections.jsx";
 import { LocationProvider } from "./context/LocationContext.jsx";
+import Map from "./pages/app/Map.jsx";
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -83,10 +84,7 @@ const AppRoutes = () => {
             element={<Connections />}
           />
 
-          <Route
-            path="/map"
-            element={<Placeholder title="Live Map" />}
-          />
+          <Route path="/map" element={<Map />} />
 
           <Route
             path="/journeys"

@@ -16,7 +16,7 @@ import useLocationTracking from "../hooks/useLocationTracking.js";
 const LocationContext = createContext(null);
 
 export const LocationProvider = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const {
     isTracking,
@@ -33,9 +33,10 @@ export const LocationProvider = ({ children }) => {
 
   const socketRef = useRef(null);
   const trackingShareIdRef = useRef(null);
+  const joinedSharesRef = useRef(new Set());
 
   // ==========================================
-  // UPDATE A SHARE IN LOCAL STATE
+  // UPDATE SHARE LOCALLY
   // ==========================================
 
   const updateShareLocally = useCallback((shareId, updates) => {
@@ -49,18 +50,17 @@ export const LocationProvider = ({ children }) => {
   }, []);
 
   // ==========================================
-  // FETCH ACTIVE LOCATION SHARES
+  // FETCH ACTIVE SHARES
   // ==========================================
 
   const refreshActiveShares = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) return [];
 
     try {
       setLoading(true);
       setError("");
 
       const response = await locationService.getActiveShares();
-
       const shares = response.data || [];
 
       setActiveShares(shares);
@@ -81,7 +81,74 @@ export const LocationProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   // ==========================================
-  // START INDIVIDUAL LOCATION SHARING
+  // JOIN LOCATION ROOM
+  // ==========================================
+
+  const joinLocationShare = useCallback(async (shareId) => {
+    const socket = socketRef.current;
+
+    if (!socket?.connected) {
+      throw new Error("Socket is not connected");
+    }
+
+    return new Promise((resolve, reject) => {
+      socket.emit("location:join", { shareId }, (response) => {
+        if (!response?.success) {
+          reject(
+            new Error(response?.message || "Unable to join location")
+          );
+          return;
+        }
+
+        joinedSharesRef.current.add(shareId);
+
+        if (response.data) {
+          updateShareLocally(shareId, response.data);
+        }
+
+        resolve(response.data);
+      });
+    });
+  }, [updateShareLocally]);
+
+  // ==========================================
+  // JOIN ALL VISIBLE SHARES
+  // ==========================================
+
+  const joinVisibleShares = useCallback(async () => {
+    const socket = socketRef.current;
+
+    if (!socket?.connected) return;
+
+    const shares = await refreshActiveShares();
+
+    if (!socket.connected) return;
+
+    for (const share of shares) {
+      if (joinedSharesRef.current.has(share.id)) continue;
+
+      try {
+        await joinLocationShare(share.id);
+      } catch (err) {
+        console.error(
+          `Unable to join location share ${share.id}:`,
+          err
+        );
+      }
+    }
+
+    // Remove IDs which are no longer active
+    const activeIds = new Set(shares.map((share) => share.id));
+
+    joinedSharesRef.current.forEach((shareId) => {
+      if (!activeIds.has(shareId)) {
+        joinedSharesRef.current.delete(shareId);
+      }
+    });
+  }, [refreshActiveShares, joinLocationShare]);
+
+  // ==========================================
+  // START SHARING
   // ==========================================
 
   const startSharing = useCallback(
@@ -89,7 +156,6 @@ export const LocationProvider = ({ children }) => {
       try {
         setError("");
 
-        // Step 1: Create sharing session using REST API
         const response = await locationService.startShare(
           recipientIds,
           expiresInMinutes
@@ -101,11 +167,9 @@ export const LocationProvider = ({ children }) => {
           throw new Error("Location share ID was not returned");
         }
 
-        // Step 2: Start browser GPS and join Socket.IO room
         const started = await startTracking(share.id);
 
         if (!started) {
-          // GPS/socket setup failed; end the server session
           try {
             await locationService.stopShare(share.id);
           } catch (stopError) {
@@ -118,8 +182,8 @@ export const LocationProvider = ({ children }) => {
         }
 
         trackingShareIdRef.current = share.id;
+        joinedSharesRef.current.add(share.id);
 
-        // Step 3: Update local state
         setActiveShares((prev) => [
           share,
           ...prev.filter((item) => item.id !== share.id)
@@ -142,7 +206,7 @@ export const LocationProvider = ({ children }) => {
   );
 
   // ==========================================
-  // STOP INDIVIDUAL LOCATION SHARING
+  // STOP SHARING
   // ==========================================
 
   const stopSharing = useCallback(
@@ -156,8 +220,6 @@ export const LocationProvider = ({ children }) => {
           trackingShareIdRef.current === shareId &&
           socket?.connected
         ) {
-          // Owner stops through Socket.IO.
-          // Backend updates database and broadcasts location:ended.
           await new Promise((resolve, reject) => {
             socket.emit("location:stop", { shareId }, (response) => {
               if (!response?.success) {
@@ -174,9 +236,10 @@ export const LocationProvider = ({ children }) => {
           stopTracking(false);
           trackingShareIdRef.current = null;
         } else {
-          // REST fallback for a disconnected socket.
           await locationService.stopShare(shareId);
         }
+
+        joinedSharesRef.current.delete(shareId);
 
         setActiveShares((prev) =>
           prev.filter((share) => share.id !== shareId)
@@ -197,37 +260,7 @@ export const LocationProvider = ({ children }) => {
   );
 
   // ==========================================
-  // JOIN ANOTHER USER'S LOCATION ROOM
-  // ==========================================
-
-  const joinLocationShare = useCallback(async (shareId) => {
-    const socket = socketRef.current;
-
-    if (!socket?.connected) {
-      throw new Error("Socket is not connected");
-    }
-
-    return new Promise((resolve, reject) => {
-      socket.emit("location:join", { shareId }, (response) => {
-        if (!response?.success) {
-          reject(
-            new Error(response?.message || "Unable to join location")
-          );
-          return;
-        }
-
-        // Synchronize the latest location immediately
-        if (response.data) {
-          updateShareLocally(shareId, response.data);
-        }
-
-        resolve(response.data);
-      });
-    });
-  }, [updateShareLocally]);
-
-  // ==========================================
-  // SOCKET CONNECTION AND LOCATION EVENTS
+  // SOCKET EVENTS
   // ==========================================
 
   useEffect(() => {
@@ -236,7 +269,6 @@ export const LocationProvider = ({ children }) => {
     const socket = connectSocket();
     socketRef.current = socket;
 
-    // Receive live GPS updates
     const handleLocationUpdated = (location) => {
       updateShareLocally(location.shareId, {
         latitude: location.latitude,
@@ -248,8 +280,33 @@ export const LocationProvider = ({ children }) => {
       });
     };
 
-    // Receive notification when owner stops sharing
+    const handleLocationStarted = async ({ shareId }) => {
+      console.log("NEW LOCATION SHARE:", shareId);
+
+      // Fetch the newly created share and join its room
+      try {
+        const response = await locationService.getActiveShares();
+        const shares = response.data || [];
+
+        setActiveShares(shares);
+
+        const newShare = shares.find(
+          (share) => share.id === shareId
+        );
+
+        if (newShare && socket.connected) {
+          await joinLocationShare(shareId);
+        }
+      } catch (err) {
+        console.error("Unable to join newly started share:", err);
+      }
+    };
+
     const handleLocationEnded = ({ shareId }) => {
+      console.log("LOCATION ENDED EVENT RECEIVED:", shareId);
+
+      joinedSharesRef.current.delete(shareId);
+
       setActiveShares((prev) =>
         prev.filter((share) => share.id !== shareId)
       );
@@ -260,31 +317,14 @@ export const LocationProvider = ({ children }) => {
       }
     };
 
-    socket.on("location:updated", handleLocationUpdated);
-    socket.on("location:ended", handleLocationEnded);
-
-    // Fetch shares and join their rooms after connection
-    const joinVisibleShares = async () => {
-      const shares = await refreshActiveShares();
-
-      if (!socket.connected || !shares?.length) return;
-
-      for (const share of shares) {
-        try {
-          await joinLocationShare(share.id);
-        } catch (err) {
-          console.error(
-            `Unable to join location share ${share.id}:`,
-            err
-          );
-        }
-      }
-    };
-
     const handleConnect = () => {
+      joinedSharesRef.current.clear();
       joinVisibleShares();
     };
 
+    socket.on("location:updated", handleLocationUpdated);
+    socket.on("location:share-started", handleLocationStarted);
+    socket.on("location:ended", handleLocationEnded);
     socket.on("connect", handleConnect);
 
     if (socket.connected) {
@@ -292,15 +332,16 @@ export const LocationProvider = ({ children }) => {
     }
 
     return () => {
-      socket.off("connect", handleConnect);
       socket.off("location:updated", handleLocationUpdated);
+      socket.off("location:share-started", handleLocationStarted);
       socket.off("location:ended", handleLocationEnded);
+      socket.off("connect", handleConnect);
     };
   }, [
     isAuthenticated,
-    refreshActiveShares,
-    joinLocationShare,
     updateShareLocally,
+    joinLocationShare,
+    joinVisibleShares,
     stopTracking
   ]);
 
@@ -315,6 +356,9 @@ export const LocationProvider = ({ children }) => {
       stopTracking(false);
       trackingShareIdRef.current = null;
     }
+
+    joinedSharesRef.current.clear();
+    socketRef.current = null;
 
     setActiveShares([]);
     setError("");

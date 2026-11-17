@@ -154,7 +154,41 @@ const StatusBadge = ({ status }) => {
     </span>
   );
 };
+const LocationSignalBadge = ({ status }) => {
+  const config = {
+    LIVE: {
+      label: "Live",
+      style: "bg-emerald-500/10 text-emerald-400",
+      dot: "bg-emerald-400"
+    },
+    STALE: {
+      label: "Stale",
+      style: "bg-amber-500/10 text-amber-400",
+      dot: "bg-amber-400"
+    },
+    LOST: {
+      label: "Signal lost",
+      style: "bg-rose-500/10 text-rose-400",
+      dot: "bg-rose-400"
+    },
+    NOT_SHARING: {
+      label: "Not sharing",
+      style: "bg-slate-500/10 text-slate-400",
+      dot: "bg-slate-500"
+    }
+  };
 
+  const item = config[status] || config.NOT_SHARING;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${item.style}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${item.dot}`} />
+      {item.label}
+    </span>
+  );
+};
 const ActionButton = ({
   children,
   onClick,
@@ -198,7 +232,59 @@ const MetricCard = ({ icon: Icon, label, value, color }) => (
 // MEMBER HELPERS
 // ========================================
 
-const getMemberLocationLabel = (member) => {
+const getLocationSignal = (member, now) => {
+  const hasCoordinates =
+    Number.isFinite(member.currentLat) &&
+    Number.isFinite(member.currentLng);
+
+  if (!hasCoordinates || !member.lastLocationAt) {
+    return {
+      status: "NOT_SHARING",
+      age: null
+    };
+  }
+
+  const timestamp = new Date(member.lastLocationAt).getTime();
+
+  if (!Number.isFinite(timestamp)) {
+    return {
+      status: "NOT_SHARING",
+      age: null
+    };
+  }
+
+  const age = Math.max(0, now - timestamp);
+
+  if (age <= 30000) {
+    return { status: "LIVE", age };
+  }
+
+  if (age <= 90000) {
+    return { status: "STALE", age };
+  }
+
+  return { status: "LOST", age };
+};
+
+const formatLastUpdate = (age) => {
+  if (age === null || age === undefined) {
+    return "No location update";
+  }
+
+  const seconds = Math.floor(age / 1000);
+
+  if (seconds < 5) return "Updated just now";
+
+  if (seconds < 60) {
+    return `Updated ${seconds}s ago`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+
+  return `Updated ${minutes}m ago`;
+};
+
+const getMemberLocationLabel = (member, signal) => {
   if (member.status === "ARRIVED") {
     return "Arrived at destination";
   }
@@ -216,10 +302,16 @@ const getMemberLocationLabel = (member) => {
   }
 
   if (member.status === "ACCEPTED") {
-    return Number.isFinite(member.currentLat) &&
-      Number.isFinite(member.currentLng)
-      ? "Sharing live location"
-      : "Location not shared";
+    switch (signal?.status) {
+      case "LIVE":
+        return "Sharing live location";
+      case "STALE":
+        return "Location update delayed";
+      case "LOST":
+        return "Location signal lost";
+      default:
+        return "Location not shared";
+    }
   }
 
   return "Not participating";
@@ -261,10 +353,20 @@ const JourneyDetails = () => {
   // STATE
   // ========================================
 
-  const [actionLoading, setActionLoading] = useState(false);
-  const [pageError, setPageError] = useState("");
+const [actionLoading, setActionLoading] = useState(false);
+const [pageError, setPageError] = useState("");
 
-  const [roadRoutes, setRoadRoutes] = useState({});
+const [roadRoutes, setRoadRoutes] = useState({});
+const [currentTime, setCurrentTime] = useState(Date.now());
+
+// Refresh location freshness indicators every five seconds.
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentTime(Date.now());
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, []);
 
   // Prevent overlapping routing queues.
   const routingInProgressRef = useRef(false);
@@ -362,12 +464,14 @@ const JourneyDetails = () => {
       routingInProgressRef.current = true;
 
       try {
-        const members = (journey?.members || []).filter(
-          (member) =>
-            member.status === "ACCEPTED" &&
-            Number.isFinite(member.currentLat) &&
-            Number.isFinite(member.currentLng)
-        );
+        const members = (journey?.members || []).filter((member) => {
+  const signal = getLocationSignal(member, Date.now());
+
+  return (
+    member.status === "ACCEPTED" &&
+    signal.status === "LIVE"
+  );
+});
 
         for (const member of members) {
           if (cancelled) break;
@@ -457,6 +561,7 @@ const JourneyDetails = () => {
     journey?.members,
     destination,
     isActive,
+    currentTime,
     canViewLiveLocations
   ]);
 
@@ -464,69 +569,78 @@ const JourneyDetails = () => {
   // MEMBER METRICS
   // ========================================
 
-  const memberMetrics = useMemo(() => {
-    if (!journey?.members) return {};
+  // ========================================
+// MEMBER METRICS
+// ========================================
 
-    return journey.members.reduce((metrics, member) => {
-      if (
-        member.status !== "ACCEPTED" ||
-        !Number.isFinite(member.currentLat) ||
-        !Number.isFinite(member.currentLng)
-      ) {
-        return metrics;
-      }
+const memberMetrics = useMemo(() => {
+  if (!journey?.members) return {};
 
-      const route = roadRoutes[member.userId];
+  return journey.members.reduce((metrics, member) => {
+    const signal = getLocationSignal(member, currentTime);
 
-      metrics[member.userId] = {
-        distance: route?.distanceKm ?? null,
-        speed: convertSpeedToKmh(member.speed),
-        eta: route?.durationMinutes ?? null,
-        routeCoordinates: route?.coordinates || [],
-        routeLoading: !route
-      };
-
+    if (
+      member.status !== "ACCEPTED" ||
+      signal.status !== "LIVE"
+    ) {
       return metrics;
-    }, {});
-  }, [journey?.members, roadRoutes]);
+    }
+
+    const route = roadRoutes[member.userId];
+
+    metrics[member.userId] = {
+      distance: route?.distanceKm ?? null,
+      speed: convertSpeedToKmh(member.speed),
+      eta: route?.durationMinutes ?? null,
+      routeCoordinates: route?.coordinates || [],
+      routeLoading: !route
+    };
+
+    return metrics;
+  }, {});
+}, [journey?.members, roadRoutes, currentTime]);
 
   // ========================================
   // JOURNEY STATISTICS
   // ========================================
 
-  const journeyStats = useMemo(() => {
-    const liveMembers = participatingMembers.filter(
-      (member) =>
-        member.status === "ACCEPTED" &&
-        Number.isFinite(member.currentLat) &&
-        Number.isFinite(member.currentLng)
+  // ========================================
+// JOURNEY STATISTICS
+// ========================================
+
+const journeyStats = useMemo(() => {
+  const liveMembers = participatingMembers.filter((member) => {
+    return (
+      member.status === "ACCEPTED" &&
+      getLocationSignal(member, currentTime).status === "LIVE"
     );
+  });
 
-    const speeds = liveMembers
-      .map((member) => convertSpeedToKmh(member.speed))
-      .filter((speed) => speed !== null);
+  const speeds = liveMembers
+    .map((member) => convertSpeedToKmh(member.speed))
+    .filter((speed) => speed !== null);
 
-    const averageSpeed = speeds.length > 0
-      ? speeds.reduce((total, speed) => total + speed, 0) /
-        speeds.length
-      : null;
+  const averageSpeed = speeds.length > 0
+    ? speeds.reduce((total, speed) => total + speed, 0) /
+      speeds.length
+    : null;
 
-    const distances = liveMembers
-      .map((member) => memberMetrics[member.userId]?.distance)
-      .filter(Number.isFinite);
+  const distances = liveMembers
+    .map((member) => memberMetrics[member.userId]?.distance)
+    .filter(Number.isFinite);
 
-    const averageDistance = distances.length > 0
-      ? distances.reduce((total, distance) => total + distance, 0) /
-        distances.length
-      : null;
+  const averageDistance = distances.length > 0
+    ? distances.reduce((total, distance) => total + distance, 0) /
+      distances.length
+    : null;
 
-    return {
-      liveCount: liveMembers.length,
-      participantCount: participatingMembers.length,
-      averageSpeed,
-      averageDistance
-    };
-  }, [participatingMembers, memberMetrics]);
+  return {
+    liveCount: liveMembers.length,
+    participantCount: participatingMembers.length,
+    averageSpeed,
+    averageDistance
+  };
+}, [participatingMembers, memberMetrics, currentTime]);
 
   // ========================================
   // MAP POINTS
@@ -536,13 +650,15 @@ const JourneyDetails = () => {
     if (!canViewLiveLocations) return [];
 
     return participatingMembers
-      .filter(
-        (member) =>
-          member.status === "ACCEPTED" &&
-          member.userId !== user?.id &&
-          Number.isFinite(member.currentLat) &&
-          Number.isFinite(member.currentLng)
-      )
+      .filter((member) => {
+  return (
+    member.status === "ACCEPTED" &&
+    member.userId !== user?.id &&
+    Number.isFinite(member.currentLat) &&
+    Number.isFinite(member.currentLng) &&
+    getLocationSignal(member, currentTime).status === "LIVE"
+  );
+})
       .map((member) => ({
         id: member.userId,
         name: member.user?.name ||
@@ -555,6 +671,7 @@ const JourneyDetails = () => {
   }, [
     participatingMembers,
     user?.id,
+    currentTime,
     canViewLiveLocations
   ]);
 
@@ -1067,14 +1184,15 @@ const JourneyDetails = () => {
               participatingMembers.map((member) => {
                 const route = roadRoutes[member.userId];
 
-                if (
-                  member.status !== "ACCEPTED" ||
-                  !Number.isFinite(member.currentLat) ||
-                  !Number.isFinite(member.currentLng) ||
-                  !route?.coordinates?.length
-                ) {
-                  return null;
-                }
+               if (
+  member.status !== "ACCEPTED" ||
+  getLocationSignal(member, currentTime).status !== "LIVE" ||
+  !Number.isFinite(member.currentLat) ||
+  !Number.isFinite(member.currentLng) ||
+  !route?.coordinates?.length
+) {
+  return null;
+}
 
                 return (
                   <Polyline
@@ -1228,6 +1346,7 @@ const JourneyDetails = () => {
               "LocAt User";
 
             const metrics = memberMetrics[member.userId];
+            const signal = getLocationSignal(member, currentTime);
 
             return (
               <div
@@ -1255,14 +1374,26 @@ const JourneyDetails = () => {
                       </p>
 
                       <p className="mt-1 text-xs text-slate-500">
-                        {getMemberLocationLabel(member)}
-                      </p>
+  {getMemberLocationLabel(member, signal)}
+</p>
                     </div>
                   </div>
 
-                  <StatusBadge status={member.status} />
-                </div>
+                  <div className="flex flex-wrap items-center gap-2">
+  <StatusBadge status={member.status} />
 
+  {(member.status === "ACCEPTED" ||
+    member.status === "ARRIVED") && (
+    <LocationSignalBadge status={signal.status} />
+  )}
+</div>
+                </div>
+{(member.status === "ACCEPTED" ||
+  member.status === "ARRIVED") && (
+  <p className="mt-3 text-xs text-slate-500">
+    {formatLastUpdate(signal.age)}
+  </p>
+)}
                 {metrics && (
                   <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3">
 

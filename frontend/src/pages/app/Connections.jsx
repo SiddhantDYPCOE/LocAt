@@ -22,7 +22,7 @@ const tabs = [
 ];
 
 const Avatar = ({ user }) => (
-  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-300">
+  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-700">
     {user?.avatarUrl ? (
       <img
         src={user.avatarUrl}
@@ -104,16 +104,16 @@ const Connections = () => {
   const renderUser = (user, actions) => (
     <div
       key={user?.id}
-      className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#111A2B] p-4"
+      className="flex items-center justify-between gap-3 rounded-2xl border border-[#E9EDEF] bg-white p-4"
     >
       <div className="flex min-w-0 items-center gap-3">
         <Avatar user={user} />
 
         <div className="min-w-0">
-          <p className="truncate font-medium text-white">
+          <p className="truncate font-medium text-[#111B21]">
             {user?.name || "Unknown user"}
           </p>
-          <p className="truncate text-sm text-slate-400">
+          <p className="truncate text-sm text-[#667781]">
             @{user?.username || "unknown"}
           </p>
         </div>
@@ -126,10 +126,10 @@ const Connections = () => {
   );
 
   const renderEmpty = (title, description) => (
-    <div className="rounded-2xl border border-dashed border-white/10 px-5 py-12 text-center">
-      <Users className="mx-auto mb-3 h-9 w-9 text-slate-600" />
-      <p className="font-medium text-slate-300">{title}</p>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+    <div className="rounded-2xl border border-dashed border-[#D9E1E5] px-5 py-12 text-center">
+      <Users className="mx-auto mb-3 h-9 w-9 text-[#8696A0]" />
+      <p className="font-medium text-[#111B21]">{title}</p>
+      <p className="mt-1 text-sm text-[#8696A0]">{description}</p>
     </div>
   );
 
@@ -138,17 +138,17 @@ const Connections = () => {
       return (
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8696A0]" />
 
             <input
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search by name or username..."
-              className="w-full rounded-2xl border border-white/10 bg-[#111A2B] py-4 pl-12 pr-4 text-white outline-none transition focus:border-indigo-500"
+              className="w-full rounded-2xl border border-[#D9E1E5] bg-white py-4 pl-12 pr-4 text-[#111B21] outline-none transition focus:border-indigo-500"
             />
 
             {searching && (
-              <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-indigo-400" />
+              <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-indigo-700" />
             )}
           </div>
 
@@ -177,7 +177,7 @@ const Connections = () => {
                       "Connection request sent."
                     )
                   }
-                  className="flex items-center gap-2 rounded-xl bg-indigo-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-600 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-indigo-500 px-3 py-2 text-sm font-medium text-[#111B21] transition hover:bg-indigo-600 disabled:opacity-50"
                 >
                   {actionLoading === user.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -216,7 +216,7 @@ const Connections = () => {
                         "Connection request accepted."
                       )
                     }
-                    className="rounded-xl bg-emerald-500/15 p-2 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50"
+                    className="rounded-xl bg-emerald-500/15 p-2 text-green-700 hover:bg-emerald-500/25 disabled:opacity-50"
                     title="Accept request"
                   >
                     <Check className="h-5 w-5" />
@@ -231,7 +231,7 @@ const Connections = () => {
                         "Connection request rejected."
                       )
                     }
-                    className="rounded-xl bg-rose-500/15 p-2 text-rose-400 hover:bg-rose-500/25 disabled:opacity-50"
+                    className="rounded-xl bg-rose-500/15 p-2 text-red-700 hover:bg-rose-500/25 disabled:opacity-50"
                     title="Reject request"
                   >
                     <X className="h-5 w-5" />
@@ -255,7 +255,7 @@ const Connections = () => {
               const user = getUser(item);
 
               return renderUser(user, (
-                <span className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-400">
+                <span className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
                   <Clock className="h-4 w-4" />
                   Pending
                 </span>
@@ -278,7 +278,7 @@ const Connections = () => {
 
             return renderUser(user, (
               <>
-                <span className="hidden items-center gap-1 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 sm:flex">
+                <span className="hidden items-center gap-1 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs text-green-700 sm:flex">
                   <UserCheck className="h-4 w-4" />
                   Connected
                 </span>
@@ -292,7 +292,7 @@ const Connections = () => {
                       "Connection removed."
                     )
                   }
-                  className="rounded-xl bg-rose-500/10 p-2 text-rose-400 hover:bg-rose-500/20 disabled:opacity-50"
+                  className="rounded-xl bg-rose-500/10 p-2 text-red-700 hover:bg-rose-500/20 disabled:opacity-50"
                   title="Remove connection"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -307,44 +307,44 @@ const Connections = () => {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
       <div>
-        <p className="text-sm font-medium text-indigo-400">
+        <p className="text-sm font-medium text-indigo-700">
           YOUR NETWORK
         </p>
-        <h1 className="mt-1 text-3xl font-bold text-white">
+        <h1 className="mt-1 text-3xl font-bold text-[#111B21]">
           Connections
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-[#667781]">
           Find people, manage requests, and build your LocAt network.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/5 bg-[#111A2B] p-4">
-          <Users className="mb-3 h-5 w-5 text-indigo-400" />
-          <p className="text-2xl font-bold text-white">
+        <div className="rounded-2xl border border-[#E9EDEF] bg-white p-4">
+          <Users className="mb-3 h-5 w-5 text-indigo-700" />
+          <p className="text-2xl font-bold text-[#111B21]">
             {connections.length}
           </p>
-          <p className="text-xs text-slate-400">Connections</p>
+          <p className="text-xs text-[#667781]">Connections</p>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-[#111A2B] p-4">
-          <UserPlus className="mb-3 h-5 w-5 text-emerald-400" />
-          <p className="text-2xl font-bold text-white">
+        <div className="rounded-2xl border border-[#E9EDEF] bg-white p-4">
+          <UserPlus className="mb-3 h-5 w-5 text-green-700" />
+          <p className="text-2xl font-bold text-[#111B21]">
             {incomingRequests.length}
           </p>
-          <p className="text-xs text-slate-400">Incoming requests</p>
+          <p className="text-xs text-[#667781]">Incoming requests</p>
         </div>
 
-        <div className="col-span-2 rounded-2xl border border-white/5 bg-[#111A2B] p-4 sm:col-span-1">
-          <Clock className="mb-3 h-5 w-5 text-amber-400" />
-          <p className="text-2xl font-bold text-white">
+        <div className="col-span-2 rounded-2xl border border-[#E9EDEF] bg-white p-4 sm:col-span-1">
+          <Clock className="mb-3 h-5 w-5 text-amber-700" />
+          <p className="text-2xl font-bold text-[#111B21]">
             {outgoingRequests.length}
           </p>
-          <p className="text-xs text-slate-400">Sent requests</p>
+          <p className="text-xs text-[#667781]">Sent requests</p>
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-white/5 bg-[#0D1524] p-2">
+      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-[#E9EDEF] bg-white p-2">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -355,8 +355,8 @@ const Connections = () => {
             }}
             className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition ${
               activeTab === id
-                ? "bg-indigo-500 text-white"
-                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                ? "bg-indigo-500 text-[#111B21]"
+                : "text-[#667781] hover:bg-[#F7F9F8] hover:text-[#111B21]"
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -375,7 +375,7 @@ const Connections = () => {
           <span>{message}</span>
           <button
             onClick={() => setMessage("")}
-            className="text-indigo-300 hover:text-white"
+            className="text-indigo-700 hover:text-[#111B21]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -383,14 +383,14 @@ const Connections = () => {
       )}
 
       {error && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
+          <Loader2 className="h-7 w-7 animate-spin text-indigo-700" />
         </div>
       ) : (
         renderContent()

@@ -2,32 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-.locat-marker-wrapper {
-  background: transparent;
-  border: none;
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111b21;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --locat-green: #25d366;
+  --locat-green-dark: #128c7e;
+  --locat-text: #111b21;
+  --locat-secondary: #667781;
+  --locat-muted: #8696a0;
+  --locat-border: #e9edef;
 }
 
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body { margin: 0; background: #fff; color: var(--locat-text); }
+button, input, textarea, select { font: inherit; }
+button { transition: background-color .16s ease, border-color .16s ease, color .16s ease; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #128c7e;
+  outline-offset: 2px;
+}
+input, textarea, select { color: var(--locat-text); }
+input::placeholder, textarea::placeholder { color: var(--locat-muted); }
+
+.locat-marker-wrapper { background: transparent; border: none; }
 .locat-marker {
-  width: 48px;
-  height: 48px;
-  overflow: hidden;
-  border: 3px solid white;
-  border-radius: 50%;
-  background: #6366f1;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  width: 44px; height: 44px; overflow: hidden; border: 3px solid #fff;
+  border-radius: 50%; background: var(--locat-green-dark);
+  box-shadow: 0 1px 4px rgba(17, 27, 33, .22);
 }
+.locat-marker img { width: 100%; height: 100%; object-fit: cover; }
+.locat-marker-fallback { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 600; }
 
-.locat-marker img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.locat-marker-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  font-weight: 700;
-}
+/* Keep message bubbles legible after adopting the white-first product palette. */
+.bg-indigo-500, .bg-indigo-600, .bg-rose-500, .bg-rose-600 { color: #fff; }

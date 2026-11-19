@@ -82,7 +82,7 @@ const createMemberIcon = (name, isCurrentUser = false) => {
         display:flex;
         align-items:center;
         justify-content:center;
-        background:${isCurrentUser ? "#6366f1" : "#0f172a"};
+        background:${isCurrentUser ? "#25D366" : "#128C7E"};
         color:white;
         border:3px solid white;
         box-shadow:0 3px 12px rgba(0,0,0,.4);
@@ -133,21 +133,21 @@ const FitJourneyBounds = ({ points, destination }) => {
 
 const StatusBadge = ({ status }) => {
   const styles = {
-    PLANNED: "bg-amber-500/10 text-amber-400",
-    ACTIVE: "bg-emerald-500/10 text-emerald-400",
-    COMPLETED: "bg-indigo-500/10 text-indigo-400",
-    CANCELLED: "bg-rose-500/10 text-rose-400",
-    ACCEPTED: "bg-emerald-500/10 text-emerald-400",
-    INVITED: "bg-amber-500/10 text-amber-400",
-    DECLINED: "bg-rose-500/10 text-rose-400",
-    ARRIVED: "bg-indigo-500/10 text-indigo-400",
-    LEFT: "bg-slate-500/10 text-slate-400"
+    PLANNED: "bg-amber-500/10 text-amber-700",
+    ACTIVE: "bg-emerald-500/10 text-green-700",
+    COMPLETED: "bg-indigo-500/10 text-indigo-700",
+    CANCELLED: "bg-rose-500/10 text-red-700",
+    ACCEPTED: "bg-emerald-500/10 text-green-700",
+    INVITED: "bg-amber-500/10 text-amber-700",
+    DECLINED: "bg-rose-500/10 text-red-700",
+    ARRIVED: "bg-indigo-500/10 text-indigo-700",
+    LEFT: "bg-slate-500/10 text-[#667781]"
   };
 
   return (
     <span
       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        styles[status] || "bg-slate-500/10 text-slate-400"
+        styles[status] || "bg-slate-500/10 text-[#667781]"
       }`}
     >
       {status || "UNKNOWN"}
@@ -158,22 +158,22 @@ const LocationSignalBadge = ({ status }) => {
   const config = {
     LIVE: {
       label: "Live",
-      style: "bg-emerald-500/10 text-emerald-400",
+      style: "bg-emerald-500/10 text-green-700",
       dot: "bg-emerald-400"
     },
     STALE: {
       label: "Stale",
-      style: "bg-amber-500/10 text-amber-400",
+      style: "bg-amber-500/10 text-amber-700",
       dot: "bg-amber-400"
     },
     LOST: {
       label: "Signal lost",
-      style: "bg-rose-500/10 text-rose-400",
+      style: "bg-rose-500/10 text-red-700",
       dot: "bg-rose-400"
     },
     NOT_SHARING: {
       label: "Not sharing",
-      style: "bg-slate-500/10 text-slate-400",
+      style: "bg-slate-500/10 text-[#667781]",
       dot: "bg-slate-500"
     }
   };
@@ -196,11 +196,11 @@ const ActionButton = ({
   variant = "primary"
 }) => {
   const variants = {
-    primary: "bg-indigo-600 hover:bg-indigo-500 text-white",
-    success: "bg-emerald-600 hover:bg-emerald-500 text-white",
+    primary: "bg-indigo-600 hover:bg-indigo-500 text-[#111B21]",
+    success: "bg-emerald-600 hover:bg-emerald-500 text-[#111B21]",
     danger:
-      "bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20",
-    secondary: "bg-white/5 hover:bg-white/10 text-slate-200"
+      "bg-rose-600/10 hover:bg-rose-600/20 text-red-700 border border-rose-500/20",
+    secondary: "bg-[#F7F9F8] hover:bg-white/10 text-[#111B21]"
   };
 
   return (
@@ -216,13 +216,13 @@ const ActionButton = ({
 };
 
 const MetricCard = ({ icon: Icon, label, value, color }) => (
-  <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+  <div className="rounded-xl border border-[#E9EDEF] bg-white/[0.03] p-4">
     <div className={`mb-3 flex items-center gap-2 ${color}`}>
       <Icon className="h-4 w-4" />
       <span className="text-xs font-medium">{label}</span>
     </div>
 
-    <p className="text-xl font-bold text-white">
+    <p className="text-xl font-bold text-[#111B21]">
       {value}
     </p>
   </div>
@@ -880,7 +880,7 @@ const journeyStats = useMemo(() => {
 
   if (detailsLoading && !journey) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center text-slate-400">
+      <div className="flex min-h-[70vh] items-center justify-center text-[#667781]">
         <Loader2 className="mr-3 h-5 w-5 animate-spin" />
         Loading journey...
       </div>
@@ -894,13 +894,13 @@ const journeyStats = useMemo(() => {
   if (!journey) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-        <AlertCircle className="mb-4 h-10 w-10 text-rose-400" />
+        <AlertCircle className="mb-4 h-10 w-10 text-red-700" />
 
-        <h2 className="text-xl font-semibold text-white">
+        <h2 className="text-xl font-semibold text-[#111B21]">
           Journey not found
         </h2>
 
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-[#667781]">
           {pageError ||
             error ||
             "You may not have access to this journey."}
@@ -908,7 +908,7 @@ const journeyStats = useMemo(() => {
 
         <button
           onClick={() => navigate("/journeys")}
-          className="mt-6 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
+          className="mt-6 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-[#111B21] hover:bg-indigo-500"
         >
           Back to Journeys
         </button>
@@ -921,7 +921,7 @@ const journeyStats = useMemo(() => {
   // ========================================
 
   return (
-    <div className="min-h-screen space-y-6 p-4 pb-28 text-white sm:p-6 lg:p-8">
+    <div className="min-h-screen space-y-6 p-4 pb-28 text-[#111B21] sm:p-6 lg:p-8">
 
       {/* Header */}
 
@@ -929,13 +929,13 @@ const journeyStats = useMemo(() => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/journeys")}
-            className="rounded-xl bg-white/5 p-3 text-slate-300 hover:bg-white/10"
+            className="rounded-xl bg-[#F7F9F8] p-3 text-[#111B21] hover:bg-white/10"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
 
           <div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[#8696A0]">
               Journey Details
             </p>
 
@@ -951,7 +951,7 @@ const journeyStats = useMemo(() => {
       {/* Errors */}
 
       {(pageError || trackingError || error) && (
-        <div className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+        <div className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-red-700">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <p>{pageError || trackingError || error}</p>
         </div>
@@ -960,14 +960,14 @@ const journeyStats = useMemo(() => {
       {/* Journey overview */}
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-white/5 bg-[#0D1524] p-5 lg:col-span-2">
+        <div className="rounded-2xl border border-[#E9EDEF] bg-white p-5 lg:col-span-2">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-indigo-500/10 p-3 text-indigo-400">
+            <div className="rounded-xl bg-indigo-500/10 p-3 text-indigo-700">
               <MapPin className="h-6 w-6" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#8696A0]">
                 Destination
               </p>
 
@@ -976,16 +976,16 @@ const journeyStats = useMemo(() => {
               </h2>
 
               {journey.destinationAddress && (
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[#667781]">
                   {journey.destinationAddress}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/5 pt-5">
+          <div className="mt-5 grid grid-cols-2 gap-4 border-t border-[#E9EDEF] pt-5">
             <div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#8696A0]">
                 Created by
               </p>
 
@@ -996,7 +996,7 @@ const journeyStats = useMemo(() => {
             </div>
 
             <div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#8696A0]">
                 Participants
               </p>
 
@@ -1007,14 +1007,14 @@ const journeyStats = useMemo(() => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-[#0D1524] p-5">
+        <div className="rounded-2xl border border-[#E9EDEF] bg-white p-5">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-400">
+            <div className="rounded-xl bg-emerald-500/10 p-3 text-green-700">
               <Radio className="h-6 w-6" />
             </div>
 
             <div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#8696A0]">
                 Location connection
               </p>
 
@@ -1025,15 +1025,15 @@ const journeyStats = useMemo(() => {
           </div>
 
           <div className="mt-5 flex items-center justify-between">
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-[#667781]">
               Your GPS sharing
             </span>
 
             <span
               className={`text-xs font-semibold ${
                 isTracking
-                  ? "text-emerald-400"
-                  : "text-slate-500"
+                  ? "text-green-700"
+                  : "text-[#8696A0]"
               }`}
             >
               {isTracking ? "ON" : "OFF"}
@@ -1045,13 +1045,13 @@ const journeyStats = useMemo(() => {
       {/* Journey statistics */}
 
       {isActive && canViewLiveLocations && (
-        <section className="rounded-2xl border border-white/5 bg-[#0D1524] p-5">
+        <section className="rounded-2xl border border-[#E9EDEF] bg-white p-5">
           <div className="mb-5">
             <h2 className="font-semibold">
               Journey Statistics
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#8696A0]">
               Live statistics calculated from shared GPS positions and road routes
             </p>
           </div>
@@ -1061,21 +1061,21 @@ const journeyStats = useMemo(() => {
               icon={Users}
               label="Participants"
               value={journeyStats.participantCount}
-              color="text-indigo-400"
+              color="text-indigo-700"
             />
 
             <MetricCard
               icon={Radio}
               label="Sharing location"
               value={`${journeyStats.liveCount} / ${journeyStats.participantCount}`}
-              color="text-emerald-400"
+              color="text-green-700"
             />
 
             <MetricCard
               icon={Gauge}
               label="Average speed"
               value={formatSpeed(journeyStats.averageSpeed)}
-              color="text-amber-400"
+              color="text-amber-700"
             />
 
             <MetricCard
@@ -1093,16 +1093,16 @@ const journeyStats = useMemo(() => {
       {currentMember?.status === "INVITED" && !isFinished && (
         <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-amber-500/10 p-3 text-amber-400">
+            <div className="rounded-xl bg-amber-500/10 p-3 text-amber-700">
               <Users className="h-5 w-5" />
             </div>
 
             <div className="flex-1">
-              <h2 className="font-semibold text-white">
+              <h2 className="font-semibold text-[#111B21]">
                 You're invited!
               </h2>
 
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-[#667781]">
                 {journey.creator?.name || "Someone"} invited you to join
                 this journey to {journey.destinationName}.
               </p>
@@ -1141,21 +1141,21 @@ const journeyStats = useMemo(() => {
 
       {/* Live journey map */}
 
-      <section className="overflow-hidden rounded-2xl border border-white/5 bg-[#0D1524]">
+      <section className="overflow-hidden rounded-2xl border border-[#E9EDEF] bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 p-5">
           <div>
             <h2 className="font-semibold">
               Live Journey Map
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#8696A0]">
               {canViewLiveLocations
                 ? "Road routes and latest shared participant positions"
                 : "Accept the invitation to view live participant locations"}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-[#667781]">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             {visibleMapPoints.length} live locations
           </div>
@@ -1257,7 +1257,7 @@ const journeyStats = useMemo(() => {
         </div>
 
         {visibleMapPoints.length === 0 && (
-          <p className="border-t border-white/5 px-5 py-3 text-xs text-slate-500">
+          <p className="border-t border-[#E9EDEF] px-5 py-3 text-xs text-[#8696A0]">
             {canViewLiveLocations
               ? "No member is currently sharing a location. Start GPS sharing to appear on the map."
               : "Live participant locations are available to accepted journey members."}
@@ -1265,7 +1265,7 @@ const journeyStats = useMemo(() => {
         )}
 
         {canViewLiveLocations && (
-          <div className="flex flex-wrap gap-4 border-t border-white/5 px-5 py-3 text-xs text-slate-400">
+          <div className="flex flex-wrap gap-4 border-t border-[#E9EDEF] px-5 py-3 text-xs text-[#667781]">
             <div className="flex items-center gap-2">
               <span className="h-2 w-5 rounded bg-indigo-400" />
               Your road route
@@ -1282,14 +1282,14 @@ const journeyStats = useMemo(() => {
       {/* GPS controls */}
 
       {isActive && canParticipate && (
-        <section className="rounded-2xl border border-white/5 bg-[#0D1524] p-5">
+        <section className="rounded-2xl border border-[#E9EDEF] bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2 className="font-semibold">
                 Share your live location
               </h2>
 
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-[#667781]">
                 Allow browser location access to share your position with the group.
               </p>
             </div>
@@ -1314,7 +1314,7 @@ const journeyStats = useMemo(() => {
           </div>
 
           {currentLocation && (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-[#8696A0]">
               Accuracy: {Math.round(currentLocation.accuracy || 0)} metres
             </p>
           )}
@@ -1323,19 +1323,19 @@ const journeyStats = useMemo(() => {
 
       {/* Journey members */}
 
-      <section className="rounded-2xl border border-white/5 bg-[#0D1524] p-5">
+      <section className="rounded-2xl border border-[#E9EDEF] bg-white p-5">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h2 className="font-semibold">
               Journey Members
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#8696A0]">
               Live participant and invitation statuses
             </p>
           </div>
 
-          <Users className="h-5 w-5 text-indigo-400" />
+          <Users className="h-5 w-5 text-indigo-700" />
         </div>
 
         <div className="space-y-3">
@@ -1355,7 +1355,7 @@ const journeyStats = useMemo(() => {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/15 font-semibold text-indigo-300">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/15 font-semibold text-indigo-700">
                       {member.user?.avatarUrl ? (
                         <img
                           src={member.user.avatarUrl}
@@ -1373,7 +1373,7 @@ const journeyStats = useMemo(() => {
                         {member.userId === user?.id ? " (You)" : ""}
                       </p>
 
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[#8696A0]">
   {getMemberLocationLabel(member, signal)}
 </p>
                     </div>
@@ -1390,24 +1390,24 @@ const journeyStats = useMemo(() => {
                 </div>
 {(member.status === "ACCEPTED" ||
   member.status === "ARRIVED") && (
-  <p className="mt-3 text-xs text-slate-500">
+  <p className="mt-3 text-xs text-[#8696A0]">
     {formatLastUpdate(signal.age)}
   </p>
 )}
                 {metrics && (
-                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3">
+                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-[#E9EDEF] pt-3">
 
                     {/* Distance */}
 
                     <div>
-                      <div className="mb-1 flex items-center gap-1 text-slate-500">
+                      <div className="mb-1 flex items-center gap-1 text-[#8696A0]">
                         <Route className="h-3 w-3" />
                         <span className="text-[10px]">
                           Road distance
                         </span>
                       </div>
 
-                      <p className="text-sm font-semibold text-indigo-300">
+                      <p className="text-sm font-semibold text-indigo-700">
                         {metrics.routeLoading
                           ? "Calculating..."
                           : formatDistance(metrics.distance)}
@@ -1417,14 +1417,14 @@ const journeyStats = useMemo(() => {
                     {/* Speed */}
 
                     <div>
-                      <div className="mb-1 flex items-center gap-1 text-slate-500">
+                      <div className="mb-1 flex items-center gap-1 text-[#8696A0]">
                         <Gauge className="h-3 w-3" />
                         <span className="text-[10px]">
                           Speed
                         </span>
                       </div>
 
-                      <p className="text-sm font-semibold text-emerald-300">
+                      <p className="text-sm font-semibold text-green-700">
                         {formatSpeed(metrics.speed)}
                       </p>
                     </div>
@@ -1432,14 +1432,14 @@ const journeyStats = useMemo(() => {
                     {/* ETA */}
 
                     <div>
-                      <div className="mb-1 flex items-center gap-1 text-slate-500">
+                      <div className="mb-1 flex items-center gap-1 text-[#8696A0]">
                         <Clock className="h-3 w-3" />
                         <span className="text-[10px]">
                           Road ETA
                         </span>
                       </div>
 
-                      <p className="text-sm font-semibold text-amber-300">
+                      <p className="text-sm font-semibold text-amber-800">
                         {metrics.routeLoading
                           ? "Calculating..."
                           : formatEta(metrics.eta)}
@@ -1457,7 +1457,7 @@ const journeyStats = useMemo(() => {
       {/* Journey actions */}
 
       {!isFinished && (
-        <section className="rounded-2xl border border-white/5 bg-[#0D1524] p-5">
+        <section className="rounded-2xl border border-[#E9EDEF] bg-white p-5">
           <h2 className="mb-4 font-semibold">
             Journey Actions
           </h2>
@@ -1525,19 +1525,19 @@ const journeyStats = useMemo(() => {
           </div>
 
           {currentMember?.status === "ARRIVED" && (
-            <p className="mt-3 text-sm text-indigo-300">
+            <p className="mt-3 text-sm text-indigo-700">
               You've arrived at the destination.
             </p>
           )}
 
           {currentMember?.status === "LEFT" && (
-            <p className="mt-3 text-sm text-slate-400">
+            <p className="mt-3 text-sm text-[#667781]">
               You've left this journey.
             </p>
           )}
 
           {currentMember?.status === "DECLINED" && (
-            <p className="mt-3 text-sm text-rose-300">
+            <p className="mt-3 text-sm text-red-700">
               You've declined this invitation.
             </p>
           )}
@@ -1547,14 +1547,14 @@ const journeyStats = useMemo(() => {
       {/* Finished journey */}
 
       {isFinished && (
-        <div className="rounded-2xl border border-white/5 bg-[#0D1524] p-5 text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-indigo-400" />
+        <div className="rounded-2xl border border-[#E9EDEF] bg-white p-5 text-center">
+          <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-indigo-700" />
 
           <h2 className="font-semibold">
             Journey {journey.status.toLowerCase()}
           </h2>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[#667781]">
             This journey is no longer active.
           </p>
         </div>
@@ -1565,7 +1565,7 @@ const journeyStats = useMemo(() => {
       <div className="text-center">
         <button
           onClick={() => navigate("/journeys")}
-          className="text-sm text-slate-400 transition hover:text-white"
+          className="text-sm text-[#667781] transition hover:text-[#111B21]"
         >
           Back to all journeys
         </button>

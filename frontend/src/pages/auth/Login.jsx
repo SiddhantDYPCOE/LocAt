@@ -43,30 +43,30 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080D1A] text-white flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-white text-[#111B21] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-9">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-none mb-4">
             <Navigation size={28} />
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight">
-            Loc<span className="text-indigo-400">At</span>
+            Loc<span className="text-indigo-700">At</span>
           </h1>
 
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-[#667781] text-sm mt-2">
             Stay connected. Stay close.
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-[#111A2C] border border-slate-800 rounded-2xl p-7 sm:p-9 shadow-2xl">
+        <div className="bg-white border border-[#E9EDEF] rounded-2xl p-7 sm:p-9 shadow-none">
 
           <div className="mb-7">
             <h2 className="text-2xl font-semibold">Welcome back</h2>
-            <p className="text-slate-400 text-sm mt-2">
+            <p className="text-[#667781] text-sm mt-2">
               Sign in to continue to your account.
             </p>
           </div>
@@ -81,7 +81,7 @@ const Login = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm text-slate-300 mb-2">
+              <label className="block text-sm text-[#111B21] mb-2">
                 Email address
               </label>
 
@@ -93,13 +93,13 @@ const Login = () => {
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
-                className="w-full bg-[#0B1220] border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                className="w-full bg-white border border-[#D9E1E5] rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm text-slate-300 mb-2">
+              <label className="block text-sm text-[#111B21] mb-2">
                 Password
               </label>
 
@@ -112,13 +112,13 @@ const Login = () => {
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
-                  className="w-full bg-[#0B1220] border border-slate-700 rounded-xl px-4 py-3 pr-12 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                  className="w-full bg-white border border-[#D9E1E5] rounded-xl px-4 py-3 pr-12 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#667781] hover:text-[#111B21]"
                 >
                   {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                 </button>
@@ -136,18 +136,18 @@ const Login = () => {
 
           </form>
 
-          <div className="mt-7 text-center text-sm text-slate-400">
+          <div className="mt-7 text-center text-sm text-[#667781]">
             Don't have an account?{" "}
             <Link
               to="/signup"
-              className="text-indigo-400 hover:text-indigo-300 font-medium"
+              className="text-indigo-700 hover:text-indigo-700 font-medium"
             >
               Create account
             </Link>
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-600 mt-7">
+        <p className="text-center text-xs text-[#8696A0] mt-7">
           © {new Date().getFullYear()} LocAt. All rights reserved.
         </p>
 

@@ -64,7 +64,7 @@ const createAvatarIcon = (avatarUrl, name) => {
         display:flex;
         align-items:center;
         justify-content:center;
-        background:#6366f1;
+        background:#25D366;
         color:white;
         font-weight:700;
         font-size:18px;

@@ -68,8 +68,8 @@ const AppLayout = () => {
         className={({ isActive }) =>
           `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
             isActive
-              ? "bg-indigo-500/15 text-indigo-400"
-              : "text-slate-400 hover:bg-white/5 hover:text-white"
+              ? "bg-indigo-500/15 text-indigo-700"
+              : "text-[#667781] hover:bg-[#F7F9F8] hover:text-[#111B21]"
           } ${
             mobile ? "flex-col gap-1 px-2 py-2 text-xs" : ""
           }`
@@ -82,28 +82,28 @@ const AppLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080D1A] text-white">
+    <div className="min-h-screen bg-white text-[#111B21]">
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/5 bg-[#0D1524] lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[#E9EDEF] bg-white lg:flex">
 
-        <div className="flex h-20 items-center gap-3 border-b border-white/5 px-6">
+        <div className="flex h-20 items-center gap-3 border-b border-[#E9EDEF] px-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500">
-            <MapPin className="h-6 w-6 text-white" />
+            <MapPin className="h-6 w-6 text-[#111B21]" />
           </div>
 
           <div>
             <h1 className="text-xl font-bold tracking-wide">
               LocAt
             </h1>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#8696A0]">
               Stay connected
             </p>
           </div>
         </div>
 
         <nav className="flex-1 space-y-2 p-4">
-          <p className="mb-4 px-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <p className="mb-4 px-4 text-xs font-semibold uppercase tracking-wider text-[#8696A0]">
             Menu
           </p>
 
@@ -112,9 +112,9 @@ const AppLayout = () => {
           ))}
         </nav>
 
-        <div className="border-t border-white/5 p-4">
-          <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/5 p-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-300">
+        <div className="border-t border-[#E9EDEF] p-4">
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[#F7F9F8] p-3">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-700">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -130,7 +130,7 @@ const AppLayout = () => {
               <p className="truncate text-sm font-medium">
                 {user?.name || "User"}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-[#8696A0]">
                 @{user?.username || "username"}
               </p>
             </div>
@@ -138,7 +138,7 @@ const AppLayout = () => {
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-400"
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-[#667781] transition hover:bg-rose-500/10 hover:text-red-700"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -147,7 +147,7 @@ const AppLayout = () => {
       </aside>
 
       {/* Mobile header */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-[#0D1524]/95 px-4 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[#E9EDEF] bg-white/95 px-4 backdrop-blur lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500">
             <MapPin className="h-5 w-5" />
@@ -158,7 +158,7 @@ const AppLayout = () => {
 
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="rounded-xl p-2 text-slate-300 hover:bg-white/5"
+          className="rounded-xl p-2 text-[#111B21] hover:bg-[#F7F9F8]"
         >
           {mobileMenuOpen ? (
             <X className="h-5 w-5" />
@@ -170,7 +170,7 @@ const AppLayout = () => {
 
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-x-0 top-16 z-50 border-b border-white/5 bg-[#0D1524] p-4 lg:hidden">
+        <div className="fixed inset-x-0 top-16 z-50 border-b border-[#E9EDEF] bg-white p-4 lg:hidden">
           <nav className="space-y-2">
             {navigation.map((item) => (
               <NavItem key={item.path} item={item} />
@@ -179,7 +179,7 @@ const AppLayout = () => {
 
           <button
             onClick={handleLogout}
-            className="mt-3 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10"
+            className="mt-3 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-red-700 hover:bg-rose-500/10"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -193,7 +193,7 @@ const AppLayout = () => {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#0D1524]/95 px-1 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[#E9EDEF] bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur lg:hidden">
         {navigation.map((item) => (
           <NavItem
             key={item.path}

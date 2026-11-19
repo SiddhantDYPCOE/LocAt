@@ -32,7 +32,7 @@ const PublicRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#080D1A] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-white text-[#111B21]">
         Loading LocAt...
       </div>
     );
@@ -44,9 +44,9 @@ const PublicRoute = ({ children }) => {
 };
 
 const Placeholder = ({ title }) => (
-  <div className="p-6 text-white">
+  <div className="p-6 text-[#111B21]">
     <h1 className="text-2xl font-semibold">{title}</h1>
-    <p className="mt-2 text-sm text-slate-400">
+    <p className="mt-2 text-sm text-[#667781]">
       This section is coming soon.
     </p>
   </div>

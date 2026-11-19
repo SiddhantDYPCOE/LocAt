@@ -22,22 +22,22 @@ const getUser = (item) =>
 
 const formatStatus = (status) => {
   const styles = {
-    PLANNED: "bg-amber-500/10 text-amber-300",
-    ACTIVE: "bg-emerald-500/10 text-emerald-300",
-    COMPLETED: "bg-indigo-500/10 text-indigo-300",
-    CANCELLED: "bg-rose-500/10 text-rose-300",
-    INVITED: "bg-amber-500/10 text-amber-300",
-    ACCEPTED: "bg-emerald-500/10 text-emerald-300",
-    DECLINED: "bg-rose-500/10 text-rose-300",
-    ARRIVED: "bg-indigo-500/10 text-indigo-300",
-    LEFT: "bg-slate-500/10 text-slate-300"
+    PLANNED: "bg-amber-500/10 text-amber-800",
+    ACTIVE: "bg-emerald-500/10 text-green-700",
+    COMPLETED: "bg-indigo-500/10 text-indigo-700",
+    CANCELLED: "bg-rose-500/10 text-red-700",
+    INVITED: "bg-amber-500/10 text-amber-800",
+    ACCEPTED: "bg-emerald-500/10 text-green-700",
+    DECLINED: "bg-rose-500/10 text-red-700",
+    ARRIVED: "bg-indigo-500/10 text-indigo-700",
+    LEFT: "bg-slate-500/10 text-[#111B21]"
   };
 
-  return styles[status] || "bg-white/5 text-slate-300";
+  return styles[status] || "bg-[#F7F9F8] text-[#111B21]";
 };
 
 const Avatar = ({ user }) => (
-  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-300">
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-700">
     {user?.avatarUrl ? (
       <img
         src={user.avatarUrl}
@@ -330,15 +330,15 @@ const Journeys = () => {
         navigate(`/journeys/${journey.id}`);
       }
     }}
-    className="cursor-pointer rounded-2xl border border-white/5 bg-[#111A2B] p-5 transition duration-200 hover:border-indigo-500/40 hover:bg-[#151F33] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    className="cursor-pointer rounded-2xl border border-[#E9EDEF] bg-white p-5 transition duration-200 hover:border-indigo-500/40 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
   >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold text-white">
+          <h3 className="truncate text-lg font-semibold text-[#111B21]">
             {journey.name || journey.destinationName}
           </h3>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[#667781]">
             Created by {journey.creator?.name || "You"}
           </p>
         </div>
@@ -354,17 +354,17 @@ const Journeys = () => {
 
       <div className="mt-5 space-y-3">
         <div className="flex items-start gap-3">
-          <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+          <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
 
           <div className="min-w-0">
-            <p className="text-xs text-slate-500">Destination</p>
+            <p className="text-xs text-[#8696A0]">Destination</p>
 
-            <p className="text-sm text-slate-200">
+            <p className="text-sm text-[#111B21]">
               {journey.destinationName}
             </p>
 
             {journey.destinationAddress && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[#8696A0]">
                 {journey.destinationAddress}
               </p>
             )}
@@ -372,14 +372,14 @@ const Journeys = () => {
         </div>
 
         <div className="flex items-start gap-3">
-          <Users className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+          <Users className="mt-0.5 h-4 w-4 shrink-0 text-indigo-700" />
 
           <div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#8696A0]">
               Participants
             </p>
 
-            <p className="text-sm text-slate-200">
+            <p className="text-sm text-[#111B21]">
               {journey.members?.length || 0} member(s)
             </p>
           </div>
@@ -387,8 +387,8 @@ const Journeys = () => {
       </div>
 
       {journey.members?.length > 0 && (
-        <div className="mt-5 border-t border-white/5 pt-4">
-          <p className="mb-3 text-xs font-medium text-slate-500">
+        <div className="mt-5 border-t border-[#E9EDEF] pt-4">
+          <p className="mb-3 text-xs font-medium text-[#8696A0]">
             JOURNEY MEMBERS
           </p>
 
@@ -402,11 +402,11 @@ const Journeys = () => {
                   <Avatar user={member.user} />
 
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-white">
+                    <p className="truncate text-sm text-[#111B21]">
                       {member.user?.name || "Unknown user"}
                     </p>
 
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-[#8696A0]">
                       @{member.user?.username || "unknown"}
                     </p>
                   </div>
@@ -425,7 +425,7 @@ const Journeys = () => {
         </div>
       )}
 
-      <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+      <div className="mt-4 flex items-center gap-2 text-xs text-[#8696A0]">
         <CalendarDays className="h-4 w-4" />
         Created {new Date(journey.createdAt).toLocaleDateString()}
       </div>
@@ -436,15 +436,15 @@ const Journeys = () => {
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-indigo-400">
+          <p className="text-sm font-medium text-indigo-700">
             TRAVEL TOGETHER
           </p>
 
-          <h1 className="mt-1 text-3xl font-bold text-white">
+          <h1 className="mt-1 text-3xl font-bold text-[#111B21]">
             Journeys
           </h1>
 
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[#667781]">
             Create journeys, invite connections, and share your live location.
           </p>
         </div>
@@ -456,7 +456,7 @@ const Journeys = () => {
             setSuccessMessage("");
             setShowCreateForm((current) => !current);
           }}
-          className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600"
+          className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-[#111B21] transition hover:bg-indigo-600"
         >
           {showCreateForm ? (
             <X className="h-4 w-4" />
@@ -469,7 +469,7 @@ const Journeys = () => {
       </div>
 
       {successMessage && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-green-700">
           <CheckCircle2 className="h-5 w-5" />
           {successMessage}
         </div>
@@ -478,23 +478,23 @@ const Journeys = () => {
       {showCreateForm && (
         <form
           onSubmit={handleCreateJourney}
-          className="space-y-6 rounded-2xl border border-white/10 bg-[#0D1524] p-5 sm:p-6"
+          className="space-y-6 rounded-2xl border border-[#D9E1E5] bg-white p-5 sm:p-6"
         >
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-[#111B21]">
               Plan a new journey
             </h2>
 
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[#667781]">
               Choose your destination, starting point, and invite people.
             </p>
           </div>
 
           {/* Journey name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-[#111B21]">
               Journey name
-              <span className="ml-1 text-slate-500">(optional)</span>
+              <span className="ml-1 text-[#8696A0]">(optional)</span>
             </label>
 
             <input
@@ -502,18 +502,18 @@ const Journeys = () => {
               onChange={(event) => setJourneyName(event.target.value)}
               maxLength={80}
               placeholder="e.g. Weekend trip"
-              className="w-full rounded-xl border border-white/10 bg-[#111A2B] px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500"
+              className="w-full rounded-xl border border-[#D9E1E5] bg-white px-4 py-3 text-[#111B21] outline-none transition placeholder:text-[#8696A0] focus:border-indigo-500"
             />
           </div>
 
           {/* Destination search */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-[#111B21]">
               Destination
             </label>
 
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+              <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8696A0]" />
 
               <input
                 value={destinationQuery}
@@ -525,23 +525,23 @@ const Journeys = () => {
                 }}
                 placeholder="Search places, cities, addresses..."
                 autoComplete="off"
-                className="w-full rounded-xl border border-white/10 bg-[#111A2B] py-3 pl-10 pr-11 text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                className="w-full rounded-xl border border-[#D9E1E5] bg-white py-3 pl-10 pr-11 text-[#111B21] outline-none placeholder:text-[#8696A0] focus:border-indigo-500"
               />
 
               {searchingDestination && (
-                <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-indigo-400" />
+                <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-indigo-700" />
               )}
             </div>
 
             {destinationQuery.trim().length > 0 &&
               destinationQuery.trim().length < 2 && (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[#8696A0]">
                   Type at least 2 characters to search.
                 </p>
               )}
 
             {destinationResults.length > 0 && (
-              <div className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#111A2B]">
+              <div className="mt-2 overflow-hidden rounded-xl border border-[#D9E1E5] bg-white">
                 {destinationResults.map((place) => {
                   const properties = place.properties || {};
 
@@ -568,17 +568,17 @@ const Journeys = () => {
                       type="button"
                       key={`${properties.osm_type}-${properties.osm_id}`}
                       onClick={() => selectDestination(place)}
-                      className="flex w-full items-start gap-3 border-b border-white/5 p-3 text-left last:border-0 hover:bg-white/5"
+                      className="flex w-full items-start gap-3 border-b border-[#E9EDEF] p-3 text-left last:border-0 hover:bg-[#F7F9F8]"
                     >
-                      <MapPin className="mt-1 h-4 w-4 shrink-0 text-indigo-400" />
+                      <MapPin className="mt-1 h-4 w-4 shrink-0 text-indigo-700" />
 
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-200">
+                        <p className="text-sm font-medium text-[#111B21]">
                           {title}
                         </p>
 
                         {subtitle && (
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-[#8696A0]">
                             {subtitle}
                           </p>
                         )}
@@ -591,14 +591,14 @@ const Journeys = () => {
 
             {destination && (
               <div className="mt-3 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
 
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-emerald-300">
+                  <p className="text-sm font-medium text-green-700">
                     {destination.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[#667781]">
                     {destination.address}
                   </p>
                 </div>
@@ -608,7 +608,7 @@ const Journeys = () => {
 
           {/* Starting location */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-medium text-[#111B21]">
               Starting location
             </label>
 
@@ -616,7 +616,7 @@ const Journeys = () => {
               type="button"
               onClick={getCurrentOrigin}
               disabled={gettingOrigin}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm font-medium text-indigo-300 transition hover:bg-indigo-500/20 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-3 text-sm font-medium text-indigo-700 transition hover:bg-indigo-500/20 disabled:opacity-50"
             >
               {gettingOrigin ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -631,14 +631,14 @@ const Journeys = () => {
 
             {origin && (
               <div className="mt-3 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
 
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-emerald-300">
+                  <p className="text-sm font-medium text-green-700">
                     {origin.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[#667781]">
                     {origin.address}
                   </p>
                 </div>
@@ -650,25 +650,25 @@ const Journeys = () => {
           <div>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-[#111B21]">
                   Invite connections
                 </label>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#8696A0]">
                   Select the people you want to travel with.
                 </p>
               </div>
 
-              <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs text-indigo-300">
+              <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs text-indigo-700">
                 {selectedUsers.length} selected
               </span>
             </div>
 
             {acceptedConnections.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-5 text-center">
-                <Users className="mx-auto mb-2 h-6 w-6 text-slate-600" />
+              <div className="rounded-xl border border-dashed border-[#D9E1E5] p-5 text-center">
+                <Users className="mx-auto mb-2 h-6 w-6 text-[#8696A0]" />
 
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-[#667781]">
                   You don't have any connections yet.
                 </p>
               </div>
@@ -685,18 +685,18 @@ const Journeys = () => {
                       className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${
                         selected
                           ? "border-indigo-500/50 bg-indigo-500/10"
-                          : "border-white/5 bg-[#111A2B] hover:border-white/10"
+                          : "border-[#E9EDEF] bg-white hover:border-[#D9E1E5]"
                       }`}
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <Avatar user={user} />
 
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-white">
+                          <p className="truncate text-sm font-medium text-[#111B21]">
                             {user.name || "Unknown user"}
                           </p>
 
-                          <p className="truncate text-xs text-slate-500">
+                          <p className="truncate text-xs text-[#8696A0]">
                             @{user.username || "unknown"}
                           </p>
                         </div>
@@ -705,7 +705,7 @@ const Journeys = () => {
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
                           selected
-                            ? "border-indigo-500 bg-indigo-500 text-white"
+                            ? "border-indigo-500 bg-indigo-500 text-[#111B21]"
                             : "border-slate-600"
                         }`}
                       >
@@ -721,7 +721,7 @@ const Journeys = () => {
           </div>
 
           {pageError && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-red-700">
               {pageError}
             </div>
           )}
@@ -733,7 +733,7 @@ const Journeys = () => {
                 resetForm();
                 setShowCreateForm(false);
               }}
-              className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+              className="rounded-xl border border-[#D9E1E5] px-5 py-3 text-sm font-medium text-[#111B21] transition hover:bg-[#F7F9F8]"
             >
               Cancel
             </button>
@@ -741,7 +741,7 @@ const Journeys = () => {
             <button
               type="submit"
               disabled={creating || gettingOrigin || searchingDestination}
-              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-[#111B21] transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -756,7 +756,7 @@ const Journeys = () => {
       )}
 
       {pageError && !showCreateForm && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-red-700">
           {pageError}
         </div>
       )}
@@ -764,28 +764,28 @@ const Journeys = () => {
       {/* Existing journeys */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-[#111B21]">
             Your journeys
           </h2>
 
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-[#8696A0]">
             {journeys.length} total
           </span>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
+            <Loader2 className="h-7 w-7 animate-spin text-indigo-700" />
           </div>
         ) : journeys.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 px-5 py-16 text-center">
-            <Route className="mx-auto mb-4 h-10 w-10 text-slate-600" />
+          <div className="rounded-2xl border border-dashed border-[#D9E1E5] px-5 py-16 text-center">
+            <Route className="mx-auto mb-4 h-10 w-10 text-[#8696A0]" />
 
-            <h3 className="font-medium text-slate-300">
+            <h3 className="font-medium text-[#111B21]">
               No journeys yet
             </h3>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-[#8696A0]">
               Create a journey and invite your connections to get started.
             </p>
           </div>

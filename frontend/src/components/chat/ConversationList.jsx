@@ -12,7 +12,7 @@ import { useConnections } from "../../context/ConnectionContext.jsx";
 import { useChat } from "../../context/ChatContext.jsx";
 
 const Avatar = ({ user }) => (
-  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-300">
+  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-indigo-700">
     {user?.avatarUrl ? (
       <img
         src={user.avatarUrl}
@@ -134,33 +134,33 @@ const ConversationList = ({ onOpenChat }) => {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-r border-white/5 bg-[#0D1524]">
+    <div className="flex h-full min-h-0 flex-col border-r border-[#E9EDEF] bg-white">
 
       {/* Header */}
-      <div className="border-b border-white/5 p-5">
+      <div className="border-b border-[#E9EDEF] p-5">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-[#111B21]">
               Messages
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#8696A0]">
               Chat with your connections
             </p>
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-700">
             <MessageCircle className="h-5 w-5" />
           </div>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8696A0]" />
 
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full rounded-xl border border-white/5 bg-[#111A2B] py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500"
+            className="w-full rounded-xl border border-[#E9EDEF] bg-white py-3 pl-10 pr-3 text-sm text-[#111B21] outline-none placeholder:text-[#8696A0] focus:border-indigo-500"
           />
         </div>
       </div>
@@ -170,17 +170,17 @@ const ConversationList = ({ onOpenChat }) => {
 
         {/* Recent conversations */}
         <div className="px-5 pb-2 pt-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8696A0]">
             Recent chats
           </p>
         </div>
 
         {conversationsLoading ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-700" />
           </div>
         ) : filteredConversations.length === 0 ? (
-          <p className="px-5 py-3 text-xs text-slate-500">
+          <p className="px-5 py-3 text-xs text-[#8696A0]">
             No recent conversations.
           </p>
         ) : (
@@ -199,25 +199,25 @@ const ConversationList = ({ onOpenChat }) => {
                 className={`flex w-full items-center gap-3 px-5 py-4 text-left transition ${
                   isSelected
                     ? "border-r-2 border-indigo-500 bg-indigo-500/10"
-                    : "hover:bg-white/[0.03]"
+                    : "hover:bg-[#F7F9F8]"
                 }`}
               >
                 <Avatar user={user} />
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-medium text-white">
+                    <p className="truncate text-sm font-medium text-[#111B21]">
                       {user?.name || "Unknown user"}
                     </p>
 
-                    <span className="shrink-0 text-[10px] text-slate-500">
+                    <span className="shrink-0 text-[10px] text-[#8696A0]">
                       {formatMessageTime(
                         lastMessage?.createdAt || conversation.updatedAt
                       )}
                     </span>
                   </div>
 
-                  <p className="mt-1 truncate text-xs text-slate-500">
+                  <p className="mt-1 truncate text-xs text-[#8696A0]">
                     {getLastMessagePreview(conversation)}
                   </p>
                 </div>
@@ -228,19 +228,19 @@ const ConversationList = ({ onOpenChat }) => {
 
         {/* Accepted connections */}
         <div className="px-5 pb-2 pt-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8696A0]">
             Start a conversation
           </p>
         </div>
 
         {connectionsLoading ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-700" />
           </div>
         ) : filteredConnections.length === 0 ? (
           <div className="px-5 py-6 text-center">
-            <Users className="mx-auto mb-2 h-7 w-7 text-slate-600" />
-            <p className="text-sm text-slate-400">
+            <Users className="mx-auto mb-2 h-7 w-7 text-[#8696A0]" />
+            <p className="text-sm text-[#667781]">
               No connections found.
             </p>
           </div>
@@ -253,23 +253,23 @@ const ConversationList = ({ onOpenChat }) => {
                 key={connection.id}
                 onClick={() => handleOpen(connection)}
                 disabled={openingId === user?.id}
-                className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-white/[0.03] disabled:opacity-50"
+                className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-[#F7F9F8] disabled:opacity-50"
               >
                 <Avatar user={user} />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-200">
+                  <p className="truncate text-sm font-medium text-[#111B21]">
                     {user?.name}
                   </p>
-                  <p className="mt-1 truncate text-xs text-slate-500">
+                  <p className="mt-1 truncate text-xs text-[#8696A0]">
                     @{user?.username}
                   </p>
                 </div>
 
                 {openingId === user?.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-700" />
                 ) : (
-                  <MessageCircle className="h-4 w-4 text-slate-600" />
+                  <MessageCircle className="h-4 w-4 text-[#8696A0]" />
                 )}
               </button>
             );
@@ -277,7 +277,7 @@ const ConversationList = ({ onOpenChat }) => {
         )}
 
         {localError && (
-          <p className="mx-4 my-3 rounded-lg bg-rose-500/10 p-3 text-xs text-rose-300">
+          <p className="mx-4 my-3 rounded-lg bg-rose-500/10 p-3 text-xs text-red-700">
             {localError}
           </p>
         )}

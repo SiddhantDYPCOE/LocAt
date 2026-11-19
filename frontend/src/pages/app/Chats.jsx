@@ -39,20 +39,20 @@ const Chats = () => {
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex shrink-0 items-center gap-3 border-b border-white/5 bg-[#0D1524] px-4 py-3">
+            <div className="flex shrink-0 items-center gap-3 border-b border-[#E9EDEF] bg-white px-4 py-3">
               <button
                 onClick={handleBack}
-                className="rounded-xl p-2 text-slate-300 hover:bg-white/5"
+                className="rounded-xl p-2 text-[#111B21] hover:bg-[#F7F9F8]"
                 aria-label="Back to conversations"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
 
               <div>
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-[#111B21]">
                   Messages
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#8696A0]">
                   Your conversation
                 </p>
               </div>
